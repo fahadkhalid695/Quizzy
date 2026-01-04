@@ -3,13 +3,16 @@ import { IQuestion, QuestionType } from '@/types'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
+// Use gemini-1.5-flash for better performance and reliability
+const MODEL_NAME = 'gemini-1.5-flash'
+
 export async function generateQuestionsFromText(
   text: string,
   numberOfQuestions: number,
   difficulty: 'easy' | 'medium' | 'hard'
 ): Promise<IQuestion[]> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME })
 
     const prompt = `
 Generate ${numberOfQuestions} educational questions of ${difficulty} difficulty from the following text.
@@ -65,7 +68,7 @@ export async function gradeShortAnswer(
   correctAnswer: string
 ): Promise<{ isCorrect: boolean; score: number; feedback: string }> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME })
 
     const prompt = `
 You are an expert teacher grading a student's answer to a short-answer question.
@@ -104,7 +107,7 @@ export async function detectCheating(
   timeSpent: number
 ): Promise<{ cheatingScore: number; details: string }> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME })
 
     const answersText = studentAnswers
       .map((a) => `Q: ${a.question}\nA: ${a.answer}`)
@@ -159,7 +162,7 @@ export async function generateTestFromWebSearch(
   difficulty: 'easy' | 'medium' | 'hard'
 ): Promise<IQuestion[]> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME })
 
     const prompt = `
 You are an expert test creator. Based on your knowledge about "${searchQuery}", create ${numberOfQuestions} ${difficulty} difficulty questions.
@@ -205,7 +208,7 @@ export async function researchAndGenerateQuiz(
   questionTypes: ('multiple_choice' | 'true_false' | 'short_answer')[] = ['multiple_choice']
 ): Promise<{ questions: IQuestion[]; researchSummary: string }> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME })
 
     // Step 1: Research the topic
     const researchPrompt = `

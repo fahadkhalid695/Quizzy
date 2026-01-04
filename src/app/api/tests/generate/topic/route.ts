@@ -29,6 +29,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if Gemini API key is configured
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not configured');
+      return NextResponse.json(
+        { error: 'AI service is not configured. Please add GEMINI_API_KEY to environment variables.' },
+        { status: 500 }
+      );
+    }
+
+    console.log('Generating quiz for topic:', topic);
+    
     const result = await researchAndGenerateQuiz(
       topic,
       numQuestions || 5,
@@ -36,9 +47,11 @@ export async function POST(request: NextRequest) {
       questionTypes || ['multiple_choice']
     );
 
+    console.log('Generated questions count:', result.questions.length);
+
     if (result.questions.length === 0) {
       return NextResponse.json(
-        { error: 'Failed to generate questions. Please try a different topic.' },
+        { error: 'Failed to generate questions. Please try a different topic or check your API key.' },
         { status: 500 }
       );
     }
@@ -50,8 +63,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in topic research:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to research and generate questions' },
+      { error: `Failed to research and generate questions: ${errorMessage}` },
       { status: 500 }
     );
   }

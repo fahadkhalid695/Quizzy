@@ -17,6 +17,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Check if Gemini API key is configured
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY is not configured');
+      return NextResponse.json(
+        { error: 'AI service is not configured. Please add GEMINI_API_KEY to environment variables.' },
+        { status: 500 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const numQuestions = parseInt(formData.get('numQuestions') as string) || 10;
@@ -27,6 +36,8 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json({ error: 'File is required' }, { status: 400 });
     }
+
+    console.log('Processing file:', file.name, 'Type:', file.type, 'Size:', file.size);
 
     let extractedContent = '';
     const fileType = file.type;
