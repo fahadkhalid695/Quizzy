@@ -66,7 +66,7 @@ export default function ClassForm({ onSuccess, onCancel }: ClassFormProps) {
             rows={4}
           />
           <div className="flex gap-2">
-            <Button type="submit" variant="primary" loading={loading}>
+            <Button type="submit" variant="primary" isLoading={loading}>
               Create Class
             </Button>
             {onCancel && (

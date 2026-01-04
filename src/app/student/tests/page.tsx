@@ -35,7 +35,7 @@ export default function TestsPage() {
   const fetchTests = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/tests/available');
+      const response = await api.get<{ tests: TestItem[] }>('/api/tests/available');
       setTests(response.tests || []);
     } catch (error) {
       notify.error('Failed to load tests');

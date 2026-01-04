@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 import { ITest, QuestionType } from '@/types'
 
-interface ITestDocument extends ITest, Document {}
+interface ITestDocument extends Omit<ITest, '_id'>, Document {}
 
 const questionSchema = new Schema({
   type: {
@@ -39,14 +39,12 @@ const testSchema = new Schema<ITestDocument>(
     },
     description: String,
     teacherId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: 'User',
     },
     classId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: 'Class',
     },
     questions: [questionSchema],
     duration: {

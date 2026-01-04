@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 import { IUser, UserRole } from '@/types'
 
-interface IUserDocument extends IUser, Document {}
+interface IUserDocument extends Omit<IUser, '_id'>, Document {}
 
 const userSchema = new Schema<IUserDocument>(
   {

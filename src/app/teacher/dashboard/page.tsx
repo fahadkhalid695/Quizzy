@@ -39,7 +39,7 @@ export default function TeacherDashboard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const classResponse = await api.get('/api/classes/list');
+      const classResponse = await api.get<{ classes: any[] }>('/api/classes/list');
       const classes = classResponse.classes || [];
       setClasses(classes);
 

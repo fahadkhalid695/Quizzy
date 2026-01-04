@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 import { IClass } from '@/types'
 
-interface IClassDocument extends IClass, Document {}
+interface IClassDocument extends Omit<IClass, '_id'>, Document {}
 
 const classSchema = new Schema<IClassDocument>(
   {
@@ -11,21 +11,15 @@ const classSchema = new Schema<IClassDocument>(
     },
     description: String,
     teacherId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: 'User',
     },
     code: {
       type: String,
       required: true,
       unique: true,
     },
-    students: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
+    students: [String],
   },
   { timestamps: true }
 )

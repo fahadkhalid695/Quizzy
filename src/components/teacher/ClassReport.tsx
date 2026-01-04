@@ -6,7 +6,7 @@ import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
-interface ReportCard Props {
+interface ReportCardProps {
   classId: string;
 }
 
@@ -22,7 +22,7 @@ export default function ClassReport({ classId }: ReportCardProps) {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/reports/class/${classId}`);
+      const response = await api.get<{ report: any }>(`/api/reports/class/${classId}`);
       setReport(response.report);
     } catch (error) {
       notify.error('Failed to fetch report');

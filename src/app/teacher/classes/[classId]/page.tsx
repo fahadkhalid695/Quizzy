@@ -27,7 +27,7 @@ export default function ClassTestsPage() {
 
   const fetchClassData = async () => {
     try {
-      const response = await api.get(`/api/classes/${classId}`);
+      const response = await api.get<{ class: any }>(`/api/classes/${classId}`);
       setClassData(response.class);
     } catch (error) {
       notify.error('Failed to load class');
@@ -37,7 +37,7 @@ export default function ClassTestsPage() {
   const fetchTests = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/tests/list?classId=${classId}`);
+      const response = await api.get<{ tests: any[] }>(`/api/tests/list?classId=${classId}`);
       setTests(response.tests || []);
     } catch (error) {
       notify.error('Failed to load tests');

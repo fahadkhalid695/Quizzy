@@ -22,11 +22,11 @@ export default function Results({ resultId, testId, onClose }: ResultsProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resultResponse = await api.get(`/api/results/${resultId}`);
+        const resultResponse = await api.get<{ result: any }>(`/api/results/${resultId}`);
         setResult(resultResponse.result);
 
         if (testId) {
-          const testResponse = await api.get(`/api/tests/${testId}`);
+          const testResponse = await api.get<{ test: any }>(`/api/tests/${testId}`);
           setTest(testResponse.test);
         }
       } catch (error) {

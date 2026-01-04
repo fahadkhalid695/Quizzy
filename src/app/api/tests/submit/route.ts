@@ -93,9 +93,29 @@ export async function POST(request: NextRequest) {
     let cheatingScore = 0;
     let cheatingDetails: string[] = [];
     try {
-      const cheatingResult = await detectCheating(answerTexts);
-      cheatingScore = cheatingResult.suspicionScore;
-      cheatingDetails = cheatingResult.details;
+      // Prepare answers for cheating detection
+      const answersForCheating = answers.map((answer: any) => {
+        const question = test.questions.find(
+          (q: any) => q._id.toString() === answer.questionId
+        );
+        return {
+          question: question?.question || '',
+          answer: answer.answer || '',
+        };
+      });
+      
+      // Calculate total time spent
+      const totalTimeSpent = answers.reduce((sum: number, answer: any) => 
+        sum + (answer.timeSpent || 0), 0
+      );
+      
+      const cheatingResult = await detectCheating(
+        answersForCheating,
+        test.duration,
+        totalTimeSpent
+      );
+      cheatingScore = cheatingResult.cheatingScore;
+      cheatingDetails = [cheatingResult.details];
     } catch {
       // Cheating detection optional
     }

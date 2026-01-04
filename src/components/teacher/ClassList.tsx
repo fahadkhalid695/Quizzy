@@ -34,7 +34,7 @@ export default function ClassList({ refreshTrigger = 0 }: ClassListProps) {
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/classes/list');
+      const response = await api.get<{ classes: any[] }>('/api/classes/list');
       setClasses(response.classes || []);
     } catch (error) {
       notify.error('Failed to fetch classes');
@@ -68,10 +68,7 @@ export default function ClassList({ refreshTrigger = 0 }: ClassListProps) {
     if (!selectedClass) return;
 
     try {
-      await api.delete('/api/classes/students', {
-        classId: selectedClass.id,
-        studentId,
-      });
+      await api.delete(`/api/classes/students?classId=${selectedClass.id}&studentId=${studentId}`);
       notify.success('Student removed');
       fetchClasses();
     } catch (error) {
@@ -139,7 +136,7 @@ export default function ClassList({ refreshTrigger = 0 }: ClassListProps) {
                   placeholder="student@example.com"
                   required
                 />
-                <Button type="submit" variant="primary" loading={addingStudent} className="w-full">
+                <Button type="submit" variant="primary" isLoading={addingStudent} className="w-full">
                   Add Student
                 </Button>
               </form>

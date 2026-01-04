@@ -23,7 +23,7 @@ export async function connectDB() {
     }
 
     cached.mongoose.promise = mongoose
-      .connect(MONGODB_URI, opts)
+      .connect(MONGODB_URI!, opts)
       .then((mongoose) => {
         return mongoose
       })
