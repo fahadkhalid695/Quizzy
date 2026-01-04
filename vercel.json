@@ -22,7 +22,7 @@
     }
   },
   "functions": {
-    "api/**: {
+    "api/**": {
       "maxDuration": 60
     }
   }
