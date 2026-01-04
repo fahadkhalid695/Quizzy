@@ -4,9 +4,6 @@ import React, { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/components/ui/Button'
-import { Input } from '@/components/ui/FormElements'
-import Card from '@/components/ui/Card'
-const { Header: CardHeader, Body: CardBody, Footer: CardFooter } = Card
 
 function RegisterContent() {
   const router = useRouter()
@@ -92,106 +89,143 @@ function RegisterContent() {
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold text-center mb-6">Create Account</h2>
+    <div className="animate-fade-in">
+      <h2 className="text-3xl font-bold text-white text-center mb-2">Create Account</h2>
+      <p className="text-gray-400 text-center mb-8">Join QuizMaster and start learning</p>
 
       {/* Role Selection */}
-      <div className="mb-6 bg-gray-50 p-4 rounded-lg">
-        <p className="text-sm font-medium text-gray-700 mb-3">I am a:</p>
-        <div className="flex gap-4">
-          <label className="flex items-center cursor-pointer">
+      <div className="mb-6">
+        <p className="text-sm font-medium text-gray-300 mb-3">I am a:</p>
+        <div className="grid grid-cols-2 gap-4">
+          <label 
+            className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              role === 'student' 
+                ? 'bg-purple-500/20 border-purple-500 text-white' 
+                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
+            }`}
+          >
             <input
               type="radio"
               value="student"
               checked={role === 'student'}
               onChange={(e) => setRole(e.target.value as 'student')}
-              className="mr-2 cursor-pointer"
+              className="sr-only"
             />
-            <span className="text-sm text-gray-700">👨‍🎓 Student</span>
+            <span className="text-2xl">👨‍🎓</span>
+            <span className="font-medium">Student</span>
           </label>
-          <label className="flex items-center cursor-pointer">
+          <label 
+            className={`flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              role === 'teacher' 
+                ? 'bg-purple-500/20 border-purple-500 text-white' 
+                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
+            }`}
+          >
             <input
               type="radio"
               value="teacher"
               checked={role === 'teacher'}
               onChange={(e) => setRole(e.target.value as 'teacher')}
-              className="mr-2 cursor-pointer"
+              className="sr-only"
             />
-            <span className="text-sm text-gray-700">👨‍🏫 Teacher</span>
+            <span className="text-2xl">👨‍🏫</span>
+            <span className="font-medium">Teacher</span>
           </label>
         </div>
       </div>
 
       {errors.submit && (
-        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-lg mb-4 text-sm">
-          {errors.submit}
+        <div className="bg-gradient-to-r from-red-500/20 to-pink-500/20 border border-red-500/30 text-red-400 p-4 rounded-xl mb-6 text-sm flex items-center gap-2">
+          <span>⚠️</span> {errors.submit}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="First Name"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            error={errors.firstName}
-            required
-          />
-          <Input
-            label="Last Name"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            error={errors.lastName}
-            required
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
+            <input
+              type="text"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              placeholder="John"
+              className={`w-full px-4 py-3 bg-white/5 border ${errors.firstName ? 'border-red-500/50' : 'border-white/10'} rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all`}
+              required
+            />
+            {errors.firstName && <p className="text-red-400 text-xs mt-1">{errors.firstName}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              placeholder="Doe"
+              className={`w-full px-4 py-3 bg-white/5 border ${errors.lastName ? 'border-red-500/50' : 'border-white/10'} rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all`}
+              required
+            />
+            {errors.lastName && <p className="text-red-400 text-xs mt-1">{errors.lastName}</p>}
+          </div>
         </div>
 
-        <Input
-          label="Email"
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={errors.email}
-          required
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="you@example.com"
+            className={`w-full px-4 py-3 bg-white/5 border ${errors.email ? 'border-red-500/50' : 'border-white/10'} rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all`}
+            required
+          />
+          {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+        </div>
 
-        <Input
-          label="Password"
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          error={errors.password}
-          helperText="At least 6 characters"
-          required
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="••••••••"
+            className={`w-full px-4 py-3 bg-white/5 border ${errors.password ? 'border-red-500/50' : 'border-white/10'} rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all`}
+            required
+          />
+          <p className="text-gray-500 text-xs mt-1">At least 6 characters</p>
+          {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+        </div>
 
-        <Input
-          label="Confirm Password"
-          type="password"
-          name="confirmPassword"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          error={errors.confirmPassword}
-          required
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="••••••••"
+            className={`w-full px-4 py-3 bg-white/5 border ${errors.confirmPassword ? 'border-red-500/50' : 'border-white/10'} rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all`}
+            required
+          />
+          {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>}
+        </div>
 
         <Button
           type="submit"
           variant="primary"
           isLoading={loading}
-          className="w-full justify-center"
+          fullWidth
         >
           Create Account
         </Button>
       </form>
 
-      <p className="text-center text-gray-600 text-sm mt-6">
+      <p className="text-center text-gray-400 text-sm mt-8">
         Already have an account?{' '}
-        <Link href="/auth/login" className="text-primary font-semibold hover:underline">
+        <Link href="/auth/login" className="text-purple-400 font-semibold hover:text-purple-300 transition-colors">
           Sign in
         </Link>
       </p>
