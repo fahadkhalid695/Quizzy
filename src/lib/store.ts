@@ -7,13 +7,14 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
-  _hasHydrated: boolean
   login: (user: IUser, token: string) => void
   logout: () => void
   setLoading: (loading: boolean) => void
   setUser: (user: IUser) => void
-  setHasHydrated: (state: boolean) => void
 }
+
+// Create a separate hydration tracker outside the store
+let hasHydrated = false
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -21,8 +22,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: true,
-      _hasHydrated: false,
+      isLoading: false,
       login: (user, token) =>
         set({
           user,
@@ -30,26 +30,74 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
           isLoading: false,
         }),
-      logout: () =>
+      logout: () => {
+        // Clear localStorage on logout
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth-storage')
+        }
         set({
           user: null,
           token: null,
           isAuthenticated: false,
-        }),
+        })
+      },
       setLoading: (loading) => set({ isLoading: loading }),
       setUser: (user) => set({ user }),
-      setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true)
-        state?.setLoading(false)
+      onRehydrateStorage: () => {
+        return (state, error) => {
+          hasHydrated = true
+          if (error) {
+            console.error('Zustand hydration error:', error)
+          }
+        }
       },
     }
   )
 )
+
+// Export function to check hydration status
+export const getHasHydrated = () => hasHydrated
+
+// Hook to wait for hydration
+export const useHasHydrated = () => {
+  const [hydrated, setHydrated] = useState(false)
+  
+  useEffect(() => {
+    // Check if already hydrated
+    if (hasHydrated) {
+      setHydrated(true)
+      return
+    }
+    
+    // Poll for hydration (fallback)
+    const checkHydration = setInterval(() => {
+      if (hasHydrated) {
+        setHydrated(true)
+        clearInterval(checkHydration)
+      }
+    }, 50)
+
+    // Set hydrated after a short delay as fallback
+    const timeout = setTimeout(() => {
+      setHydrated(true)
+      clearInterval(checkHydration)
+    }, 100)
+
+    return () => {
+      clearInterval(checkHydration)
+      clearTimeout(timeout)
+    }
+  }, [])
+  
+  return hydrated
+}
+
+// Need to import these for the hook
+import { useState, useEffect } from 'react'
 
 // Class Management Store
 interface ClassState {

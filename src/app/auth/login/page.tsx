@@ -4,10 +4,12 @@ import React, { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/components/ui/Button'
+import { useAuthStore } from '@/lib/store'
 
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const login = useAuthStore((state) => state.login)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
 
@@ -39,8 +41,15 @@ function LoginContent() {
 
       if (response.ok) {
         const data = await response.json()
+        
+        // Store in Zustand (which persists to localStorage)
+        login(data.user, data.token)
+        
+        // Also store token separately for API calls
         localStorage.setItem('token', data.token)
-        if (data.role === 'teacher') {
+        
+        // Redirect based on role
+        if (data.user.role === 'teacher') {
           router.push('/teacher/dashboard')
         } else {
           router.push('/student/dashboard')

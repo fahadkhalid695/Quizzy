@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/lib/store';
+import { useAuthStore, useHasHydrated } from '@/lib/store';
 import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
@@ -25,30 +25,27 @@ export default function TeacherDashboard() {
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
+  
+  // Use the hydration hook
+  const hasHydrated = useHasHydrated();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const notify = useNotify();
 
-  // Handle hydration
+  // Fetch data when hydrated and user is available
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (isMounted && hasHydrated) {
+    if (hasHydrated && user) {
       fetchData();
     }
-  }, [isMounted, hasHydrated]);
+  }, [hasHydrated, user]);
 
   // Redirect if not authenticated after hydration
   useEffect(() => {
-    if (isMounted && hasHydrated && !user) {
+    if (hasHydrated && !user) {
       router.push('/auth/login');
     }
-  }, [isMounted, hasHydrated, user, router]);
+  }, [hasHydrated, user, router]);
 
   const fetchData = async () => {
     try {
@@ -73,6 +70,7 @@ export default function TeacherDashboard() {
         averageScore: 0,
       });
     } catch (error) {
+      console.error('Failed to load dashboard data:', error);
       notify.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -84,13 +82,25 @@ export default function TeacherDashboard() {
     router.push('/');
   };
 
-  // Show loading while hydrating
-  if (!isMounted || !hasHydrated || !user) {
+  // Show loading while hydrating or no user yet
+  if (!hasHydrated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/70 animate-pulse">Loading dashboard...</p>
+          <p className="text-white/70 animate-pulse">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If hydrated but no user, show redirecting message (will redirect via useEffect)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/70 animate-pulse">Redirecting to login...</p>
         </div>
       </div>
     );

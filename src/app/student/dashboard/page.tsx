@@ -2,34 +2,43 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/lib/store'
+import { useAuthStore, useHasHydrated } from '@/lib/store'
 import Button from '@/components/ui/Button'
 import Link from 'next/link'
 
 export default function StudentDashboard() {
   const router = useRouter()
-  const { user, logout, _hasHydrated: hasHydrated } = useAuthStore()
+  const hasHydrated = useHasHydrated()
+  const user = useAuthStore((state) => state.user)
+  const logout = useAuthStore((state) => state.logout)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   // Redirect if not authenticated after hydration
   useEffect(() => {
-    if (isMounted && hasHydrated && !user) {
+    if (hasHydrated && !user) {
       router.push('/auth/login')
     }
-  }, [isMounted, hasHydrated, user, router])
+  }, [hasHydrated, user, router])
 
   // Show loading while hydrating
-  if (!isMounted || !hasHydrated || !user) {
+  if (!hasHydrated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/70 animate-pulse">Loading dashboard...</p>
+          <p className="text-white/70 animate-pulse">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If hydrated but no user, show redirecting message
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/70 animate-pulse">Redirecting to login...</p>
         </div>
       </div>
     )
