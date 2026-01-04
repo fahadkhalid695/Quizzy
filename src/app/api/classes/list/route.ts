@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    let classes: any[];
+    let classes: any[] = [];
     if (payload.role === 'teacher') {
       // Get classes taught by this teacher
       classes = await Class.find({ teacherId: payload.userId })
