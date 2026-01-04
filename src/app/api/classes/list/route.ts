@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-middleware';
 import Class from '@/models/Class';
+import Test from '@/models/Test';
+import User from '@/models/User';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,13 +25,94 @@ export async function GET(request: NextRequest) {
     if (payload.role === 'teacher') {
       // Get classes taught by this teacher
       classes = await Class.find({ teacherId: payload.userId })
-        .populate('students', 'firstName lastName email')
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 })
+        .lean();
+      
+      // Get test counts for each class
+      const classIds = classes.map(c => c._id.toString());
+      const testCounts = await Test.aggregate([
+        { $match: { classId: { $in: classIds } } },
+        { $group: { _id: '$classId', count: { $sum: 1 } } }
+      ]);
+      const testCountMap = new Map(testCounts.map(t => [t._id, t.count]));
+      
+      // Get student details for each class
+      const allStudentIds = [...new Set(classes.flatMap(c => c.students || []))];
+      const students = await User.find({ 
+        $or: [
+          { _id: { $in: allStudentIds } },
+          { _id: { $in: allStudentIds.map(id => id?.toString()).filter(Boolean) } }
+        ]
+      }).select('firstName lastName email').lean();
+      const studentMap = new Map(students.map(s => [s._id.toString(), s]));
+      
+      // Format response
+      classes = classes.map(c => ({
+        _id: c._id,
+        name: c.name,
+        description: c.description,
+        code: c.code,
+        students: (c.students || []).map((sid: any) => {
+          const student = studentMap.get(sid?.toString());
+          return student ? {
+            _id: sid,
+            firstName: student.firstName,
+            lastName: student.lastName,
+            email: student.email
+          } : { _id: sid, firstName: 'Unknown', lastName: 'Student', email: '' };
+        }),
+        testCount: testCountMap.get(c._id.toString()) || 0,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt,
+      }));
     } else if (payload.role === 'student') {
-      // Get classes student is enrolled in
-      classes = await Class.find({ students: payload.userId })
-        .populate('teacherId', 'firstName lastName email')
-        .sort({ createdAt: -1 });
+      // Get classes student is enrolled in - handle both string and ObjectId
+      classes = await Class.find({ 
+        $or: [
+          { students: payload.userId },
+          { students: payload.userId.toString() }
+        ]
+      })
+        .sort({ createdAt: -1 })
+        .lean();
+      
+      // Get teacher details
+      const teacherIds = [...new Set(classes.map(c => c.teacherId))];
+      const teachers = await User.find({ 
+        $or: [
+          { _id: { $in: teacherIds } },
+          { _id: { $in: teacherIds.map(id => id?.toString()).filter(Boolean) } }
+        ]
+      }).select('firstName lastName email').lean();
+      const teacherMap = new Map(teachers.map(t => [t._id.toString(), t]));
+      
+      // Get test counts
+      const classIds = classes.map(c => c._id.toString());
+      const testCounts = await Test.aggregate([
+        { $match: { classId: { $in: classIds }, isPublished: true } },
+        { $group: { _id: '$classId', count: { $sum: 1 } } }
+      ]);
+      const testCountMap = new Map(testCounts.map(t => [t._id, t.count]));
+      
+      // Format response
+      classes = classes.map(c => {
+        const teacher = teacherMap.get(c.teacherId?.toString());
+        return {
+          _id: c._id,
+          name: c.name,
+          description: c.description,
+          code: c.code,
+          teacherId: teacher ? {
+            _id: c.teacherId,
+            firstName: teacher.firstName,
+            lastName: teacher.lastName,
+            email: teacher.email
+          } : { _id: c.teacherId, firstName: 'Unknown', lastName: 'Teacher', email: '' },
+          testCount: testCountMap.get(c._id.toString()) || 0,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+        };
+      });
     }
 
     return NextResponse.json({

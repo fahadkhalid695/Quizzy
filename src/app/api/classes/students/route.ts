@@ -39,9 +39,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get student details
+    // Get student details - handle both string and ObjectId formats
     const studentIds = classDoc.students || [];
-    const students = await User.find({ _id: { $in: studentIds } })
+    const students = await User.find({ 
+      $or: [
+        { _id: { $in: studentIds } },
+        { _id: { $in: studentIds.map((id: any) => id?.toString()).filter(Boolean) } }
+      ]
+    })
       .select('firstName lastName email')
       .lean();
 
@@ -116,12 +121,26 @@ export async function POST(request: NextRequest) {
     classDoc.students.push(student._id);
     await classDoc.save();
 
-    await classDoc.populate('students', 'firstName lastName email');
+    // Get updated student list
+    const students = await User.find({ 
+      $or: [
+        { _id: { $in: classDoc.students } },
+        { _id: { $in: classDoc.students.map((id: any) => id?.toString()).filter(Boolean) } }
+      ]
+    }).select('firstName lastName email');
 
     return NextResponse.json({
       success: true,
       message: 'Student added to class',
-      class: classDoc,
+      class: {
+        ...classDoc.toObject(),
+        students: students.map(s => ({
+          _id: s._id,
+          firstName: s.firstName,
+          lastName: s.lastName,
+          email: s.email
+        }))
+      },
     });
   } catch (error) {
     console.error('Add student error:', error);
@@ -188,12 +207,26 @@ export async function DELETE(request: NextRequest) {
       $pull: { enrolledClasses: classId },
     });
 
-    await classDoc.populate('students', 'firstName lastName email');
+    // Get updated student list
+    const students = await User.find({ 
+      $or: [
+        { _id: { $in: classDoc.students } },
+        { _id: { $in: classDoc.students.map((id: any) => id?.toString()).filter(Boolean) } }
+      ]
+    }).select('firstName lastName email');
 
     return NextResponse.json({
       success: true,
       message: 'Student removed from class',
-      class: classDoc,
+      class: {
+        ...classDoc.toObject(),
+        students: students.map(s => ({
+          _id: s._id,
+          firstName: s.firstName,
+          lastName: s.lastName,
+          email: s.email
+        }))
+      },
     });
   } catch (error) {
     console.error('Remove student error:', error);

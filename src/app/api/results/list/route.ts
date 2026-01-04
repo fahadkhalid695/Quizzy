@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-middleware';
 import TestResult from '@/models/TestResult';
+import Test from '@/models/Test';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,21 +22,36 @@ export async function GET(request: NextRequest) {
 
     // Get all results for this student
     const results = await TestResult.find({ studentId: payload.userId })
-      .populate('testId', 'title totalMarks duration difficulty')
       .sort({ submittedAt: -1 })
       .lean();
 
-    const formattedResults = results.map((result: any) => ({
-      id: result._id.toString(),
-      testId: result.testId ? {
-        title: result.testId.title,
-        totalMarks: result.testId.totalMarks,
-      } : null,
-      score: result.score,
-      percentage: result.percentage,
-      submittedAt: result.submittedAt,
-      timeTaken: result.timeTaken || 0,
-    }));
+    // Get all test IDs from results
+    const testIds = [...new Set(results.map((r: any) => r.testId))];
+    
+    // Fetch test details
+    const tests = await Test.find({ 
+      $or: [
+        { _id: { $in: testIds } },
+        { _id: { $in: testIds.map(id => id?.toString()).filter(Boolean) } }
+      ]
+    }).select('title totalMarks duration difficulty').lean();
+    
+    const testMap = new Map(tests.map(t => [t._id.toString(), t]));
+
+    const formattedResults = results.map((result: any) => {
+      const test = testMap.get(result.testId?.toString());
+      return {
+        id: result._id.toString(),
+        testId: test ? {
+          title: test.title,
+          totalMarks: test.totalMarks,
+        } : { title: 'Unknown Test', totalMarks: 0 },
+        score: result.score,
+        percentage: result.percentage,
+        submittedAt: result.submittedAt,
+        timeTaken: result.timeTaken || 0,
+      };
+    });
 
     return NextResponse.json({ results: formattedResults });
   } catch (error) {

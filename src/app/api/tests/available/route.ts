@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
     
     console.log('Student enrolled in classes:', classes.map(c => ({ id: c._id, name: c.name })));
     
-    const classIds = classes.map((c) => c._id);
+    // Create a map of classId to className
+    const classMap = new Map(classes.map(c => [c._id.toString(), c.name]));
+    const classIds = classes.map((c) => c._id.toString());
 
     if (classIds.length === 0) {
       console.log('Student not enrolled in any classes');
@@ -43,29 +45,37 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get published tests from enrolled classes
+    // Get published tests from enrolled classes - match both string and ObjectId classIds
     const tests = await Test.find({
-      classId: { $in: classIds },
+      $or: [
+        { classId: { $in: classIds } },
+        { classId: { $in: classes.map(c => c._id) } }
+      ],
       isPublished: true,
-    })
-      .populate('classId', 'name')
-      .sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 });
 
     console.log('Found tests:', tests.length);
 
     return NextResponse.json({
       success: true,
-      tests: tests.map((test) => ({
-        id: test._id,
-        title: test.title,
-        description: test.description,
-        duration: test.duration,
-        difficulty: test.difficulty,
-        totalMarks: test.totalMarks,
-        isPublished: test.isPublished,
-        classId: test.classId,
-        createdAt: test.createdAt,
-      })),
+      tests: tests.map((test) => {
+        const classIdStr = test.classId?.toString();
+        return {
+          id: test._id,
+          title: test.title,
+          description: test.description,
+          duration: test.duration,
+          difficulty: test.difficulty,
+          totalMarks: test.totalMarks,
+          isPublished: test.isPublished,
+          classId: {
+            id: classIdStr,
+            _id: classIdStr,
+            name: classMap.get(classIdStr) || 'Unknown Class'
+          },
+          createdAt: test.createdAt,
+        };
+      }),
     });
   } catch (error) {
     console.error('Get available tests error:', error);

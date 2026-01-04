@@ -36,8 +36,16 @@ export default function AnalyticsPage() {
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const response = await api.get<{ classes: ClassData[] }>('/api/classes/list');
-      setClasses(response.classes || []);
+      const response = await api.get<{ classes: any[] }>('/api/classes/list');
+      // Map _id to _id for consistency and add testCount
+      const mappedClasses = (response.classes || []).map((cls: any) => ({
+        _id: cls._id || cls.id,
+        name: cls.name,
+        description: cls.description || '',
+        students: cls.students || [],
+        testCount: cls.testCount || 0,
+      }));
+      setClasses(mappedClasses);
     } catch (error) {
       notify.error('Failed to load classes');
     } finally {

@@ -18,6 +18,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Class ID is required' }, { status: 400 });
     }
 
+    // Get class name
+    const classDoc = await Class.findById(classId).select('name');
+    const className = classDoc?.name || 'Unknown Class';
+
     // If showAll is true and user is teacher, show all tests (including drafts)
     let query: any = { classId };
     
@@ -34,7 +38,6 @@ export async function GET(request: NextRequest) {
     }
 
     const tests = await Test.find(query)
-      .populate('classId', 'name')
       .sort({ createdAt: -1 });
 
     return NextResponse.json({
@@ -47,7 +50,11 @@ export async function GET(request: NextRequest) {
         difficulty: test.difficulty,
         totalMarks: test.totalMarks,
         isPublished: test.isPublished,
-        classId: test.classId,
+        classId: {
+          _id: classId,
+          id: classId,
+          name: className
+        },
         questionCount: test.questions?.length || 0,
         aiGenerated: test.aiGenerated || false,
         sourceType: test.sourceType || 'manual',

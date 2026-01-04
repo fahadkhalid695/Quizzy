@@ -41,12 +41,26 @@ export async function GET(
 
     // Get all results
     const results = await TestResult.find(query)
-      .populate('testId', 'title duration difficulty totalMarks')
       .sort({ createdAt: -1 });
+
+    // Get test details
+    const testIds = [...new Set(results.map((r: any) => r.testId))];
+    const tests = await Test.find({ 
+      $or: [
+        { _id: { $in: testIds } },
+        { _id: { $in: testIds.map(id => id?.toString()).filter(Boolean) } }
+      ]
+    }).select('title duration difficulty totalMarks').lean();
+    const testMap = new Map(tests.map((t: any) => [t._id.toString(), t]));
 
     // Get student details
     const studentIds = [...new Set(results.map((r: any) => r.studentId))];
-    const students = await User.find({ _id: { $in: studentIds } })
+    const students = await User.find({ 
+      $or: [
+        { _id: { $in: studentIds } },
+        { _id: { $in: studentIds.map(id => id?.toString()).filter(Boolean) } }
+      ]
+    })
       .select('firstName lastName email')
       .lean();
     
@@ -54,11 +68,12 @@ export async function GET(
 
     // Format data for export
     const exportData = results.map((result: any) => {
-      const student = studentMap.get(result.studentId.toString());
+      const student = studentMap.get(result.studentId?.toString());
+      const test = testMap.get(result.testId?.toString());
       return {
         studentName: student ? `${student.firstName} ${student.lastName}` : 'Unknown',
         studentEmail: student?.email || 'N/A',
-        testTitle: result.testId?.title || 'Unknown Test',
+        testTitle: test?.title || 'Unknown Test',
         totalMarks: result.totalMarks,
         obtainedMarks: result.obtainedMarks,
         percentage: result.percentage,

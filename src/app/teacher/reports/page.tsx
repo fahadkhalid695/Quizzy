@@ -63,10 +63,17 @@ export default function ReportsPage() {
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const response = await api.get<{ classes: ClassSummary[] }>('/api/classes/list');
-      setClasses(response.classes || []);
-      if (response.classes?.length > 0) {
-        setSelectedClass(response.classes[0].id);
+      const response = await api.get<{ classes: any[] }>('/api/classes/list');
+      // Map _id to id for consistency
+      const mappedClasses = (response.classes || []).map((cls: any) => ({
+        id: cls._id || cls.id,
+        name: cls.name,
+        code: cls.code,
+        studentCount: cls.students?.length || 0,
+      }));
+      setClasses(mappedClasses);
+      if (mappedClasses.length > 0) {
+        setSelectedClass(mappedClasses[0].id);
       }
     } catch (error) {
       notify.error('Failed to load classes');

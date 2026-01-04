@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-middleware';
 import Test from '@/models/Test';
+import Class from '@/models/Class';
 
 export async function GET(request: NextRequest, props: { params: Promise<{ testId: string }> }) {
   try {
@@ -18,11 +19,14 @@ export async function GET(request: NextRequest, props: { params: Promise<{ testI
     }
 
     const { testId } = await props.params;
-    const test = await Test.findById(testId).populate('classId', 'name');
+    const test = await Test.findById(testId);
 
     if (!test) {
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
+
+    // Get class name
+    const classDoc = await Class.findById(test.classId).select('name');
 
     // Check access: teacher owns it or student is in the class
     if (payload.role === 'teacher' && test.teacherId.toString() !== payload.userId) {
@@ -42,7 +46,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ testI
         isPublished: test.isPublished,
         startTime: test.startTime,
         endTime: test.endTime,
-        classId: test.classId,
+        classId: {
+          _id: test.classId,
+          id: test.classId,
+          name: classDoc?.name || 'Unknown Class'
+        },
       },
     });
   } catch (error) {

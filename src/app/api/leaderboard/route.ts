@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-middleware';
 import TestResult from '@/models/TestResult';
+import Test from '@/models/Test';
 import User from '@/models/User';
 
 export const dynamic = 'force-dynamic';
@@ -26,23 +27,49 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Class ID is required' }, { status: 400 });
     }
 
-    // Get all results for the class
+    // Get all results for the class (without populate)
     const results = await TestResult.find({ classId })
-      .populate('studentId', 'firstName lastName email')
-      .populate('testId', 'title duration')
       .sort({ percentage: -1, createdAt: -1 });
+
+    // Get all student IDs and test IDs from results
+    const studentIds = [...new Set(results.map((r: any) => r.studentId))];
+    const testIds = [...new Set(results.map((r: any) => r.testId))];
+
+    // Fetch students and tests
+    const [students, tests] = await Promise.all([
+      User.find({ 
+        $or: [
+          { _id: { $in: studentIds } },
+          { _id: { $in: studentIds.map(id => id?.toString()).filter(Boolean) } }
+        ]
+      }).select('firstName lastName email').lean(),
+      Test.find({ 
+        $or: [
+          { _id: { $in: testIds } },
+          { _id: { $in: testIds.map(id => id?.toString()).filter(Boolean) } }
+        ]
+      }).select('title duration').lean()
+    ]);
+
+    const studentMap = new Map(students.map(s => [s._id.toString(), s]));
+    const testMap = new Map(tests.map(t => [t._id.toString(), t]));
 
     // Group by student and calculate average
     const studentStats = new Map<string, any>();
 
     results.forEach((result: any) => {
-      const studentId = result.studentId._id.toString();
+      const studentId = result.studentId?.toString();
+      if (!studentId) return;
+      
+      const student = studentMap.get(studentId);
+      const test = testMap.get(result.testId?.toString());
+      
       if (!studentStats.has(studentId)) {
         studentStats.set(studentId, {
           studentId,
-          firstName: result.studentId.firstName,
-          lastName: result.studentId.lastName,
-          email: result.studentId.email,
+          firstName: student?.firstName || 'Unknown',
+          lastName: student?.lastName || 'Student',
+          email: student?.email || '',
           totalTests: 0,
           totalMarks: 0,
           obtainedMarks: 0,
@@ -53,14 +80,14 @@ export async function GET(request: NextRequest) {
 
       const stats = studentStats.get(studentId);
       stats.totalTests += 1;
-      stats.totalMarks += result.totalMarks;
-      stats.obtainedMarks += result.obtainedMarks;
+      stats.totalMarks += result.totalMarks || 0;
+      stats.obtainedMarks += result.obtainedMarks || 0;
       stats.testResults.push({
-        testId: result.testId._id,
-        testTitle: result.testId.title,
-        obtainedMarks: result.obtainedMarks,
-        totalMarks: result.totalMarks,
-        percentage: result.percentage,
+        testId: result.testId,
+        testTitle: test?.title || 'Test',
+        obtainedMarks: result.obtainedMarks || 0,
+        totalMarks: result.totalMarks || 0,
+        percentage: result.percentage || 0,
         submittedAt: result.createdAt,
       });
     });
