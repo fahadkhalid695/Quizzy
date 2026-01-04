@@ -270,24 +270,3 @@ function ActionButton({
     </button>
   );
 }
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
-                    <div>
-                      <h4 className="font-semibold text-gray-900">
-                        Mathematics Chapter {i}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        Taken by {5 * i} students
-                      </p>
-                    </div>
-                    <span className="text-lg">📝</span>
-                  </div>
-                ))}
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-      </div>
-    </div>
-  )
-}
