@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { IUser, UserRole } from '@/types'
 
 interface AuthState {
@@ -10,28 +11,44 @@ interface AuthState {
   logout: () => void
   setLoading: (loading: boolean) => void
   setUser: (user: IUser) => void
+  hydrate: () => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  isLoading: false,
-  login: (user, token) =>
-    set({
-      user,
-      token,
-      isAuthenticated: true,
-    }),
-  logout: () =>
-    set({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       user: null,
       token: null,
       isAuthenticated: false,
+      isLoading: false,
+      login: (user, token) =>
+        set({
+          user,
+          token,
+          isAuthenticated: true,
+        }),
+      logout: () =>
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+        }),
+      setLoading: (loading) => set({ isLoading: loading }),
+      setUser: (user) => set({ user }),
+      hydrate: () => {
+        // This function is called on app startup to restore state from localStorage
+        const token = localStorage.getItem('token')
+        if (token) {
+          set({ token, isAuthenticated: true })
+        }
+      },
     }),
-  setLoading: (loading) => set({ isLoading: loading }),
-  setUser: (user) => set({ user }),
-}))
+    {
+      name: 'auth-storage', // localStorage key
+      storage: typeof window !== 'undefined' ? require('zustand/middleware').default.localStorage : undefined,
+    }
+  )
+)
 
 // Class Management Store
 interface ClassState {

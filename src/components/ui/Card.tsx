@@ -7,7 +7,7 @@ interface CardProps {
 
 export function Card({ className = '', children }: CardProps) {
   return (
-    <div className={`bg-white rounded-lg shadow-soft hover:shadow-medium transition-shadow p-6 ${className}`}>
+    <div className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:border-purple-400/50 transition-all p-6 ${className}`}>
       {children}
     </div>
   )
@@ -20,9 +20,9 @@ interface CardHeaderProps {
 
 export function CardHeader({ title, subtitle }: CardHeaderProps) {
   return (
-    <div className="mb-4 pb-4 border-b border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-      {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
+    <div className="mb-4 pb-4 border-b border-white/20">
+      <h3 className="text-lg font-bold text-white">{title}</h3>
+      {subtitle && <p className="text-sm text-gray-400 mt-1">{subtitle}</p>}
     </div>
   )
 }
@@ -42,7 +42,7 @@ interface CardFooterProps {
 }
 
 export function CardFooter({ children, className = '' }: CardFooterProps) {
-  return <div className={`mt-4 pt-4 border-t border-gray-200 ${className}`}>{children}</div>
+  return <div className={`mt-4 pt-4 border-t border-white/20 ${className}`}>{children}</div>
 }
 
 Card.Header = CardHeader

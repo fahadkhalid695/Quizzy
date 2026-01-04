@@ -6,7 +6,6 @@ import { useAuthStore } from '@/lib/store';
 import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 import Link from 'next/link';
 
 interface Stats {
@@ -70,18 +69,29 @@ export default function TeacherDashboard() {
     router.push('/');
   };
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+    }
+  }, [user, router]);
+
+  if (!user) {
+    return <div className="min-h-screen bg-slate-900" />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 flex">
       {/* Sidebar */}
       <div
         className={`${
           collapsed ? 'w-20' : 'w-64'
-        } bg-white border-r border-gray-200 shadow-lg transition-all duration-300 p-4 space-y-6`}
+        } bg-white/10 backdrop-blur-md border-r border-white/20 transition-all duration-300 p-4 space-y-6 sticky top-0 h-screen overflow-y-auto`}
       >
         {/* Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition w-full text-center"
+          className="p-2 hover:bg-white/20 rounded-lg transition w-full text-center text-white"
         >
           {collapsed ? '→' : '←'}
         </button>
@@ -89,8 +99,8 @@ export default function TeacherDashboard() {
         {/* Logo */}
         {!collapsed && (
           <div className="text-center">
-            <div className="text-3xl mb-2">📚</div>
-            <h1 className="font-bold text-lg text-gray-900">QuizApp</h1>
+            <div className="text-4xl mb-2">✨</div>
+            <h1 className="font-bold text-lg bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">QuizMaster</h1>
           </div>
         )}
 
@@ -104,10 +114,10 @@ export default function TeacherDashboard() {
         </nav>
 
         {/* Logout */}
-        <div className="pt-4 border-t border-gray-200">
+        <div className="pt-4 border-t border-white/20">
           <button
             onClick={handleLogout}
-            className={`w-full p-3 rounded-lg text-red-600 hover:bg-red-50 transition font-medium ${
+            className={`w-full p-3 rounded-xl text-red-400 hover:bg-red-500/20 transition font-medium ${
               collapsed ? 'text-center' : 'text-left'
             }`}
           >
@@ -120,21 +130,37 @@ export default function TeacherDashboard() {
       <div className="flex-1 p-4 md:p-8 overflow-auto">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">
+              <h1 className="text-5xl font-bold text-white mb-2">
                 Welcome back, {user?.firstName}! 👋
               </h1>
-              <p className="text-gray-600 mt-1">Manage your classes and tests</p>
+              <p className="text-gray-400 text-lg">Manage your classes and tests</p>
             </div>
-            <Button variant="primary" onClick={() => router.push('/teacher/classes')}>
-              + Create Class
+            <Button 
+              variant="primary" 
+              onClick={() => router.push('/teacher/classes')}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            >
+              + New Class
             </Button>
+          </div>
+
+          {/* Teacher Profile Card */}
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 mb-8 flex items-center gap-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-2xl font-bold text-white">
+              {user.firstName[0]}{user.lastName[0]}
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-white mb-1">{user.firstName} {user.lastName}</h2>
+              <p className="text-gray-400">{user.email}</p>
+              <p className="text-gray-500 text-sm mt-1">Role: <span className="text-purple-400 font-semibold">Teacher</span></p>
+            </div>
           </div>
 
           {/* Stats Cards */}
           {!loading && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
               <StatCard icon="📚" title="Classes" value={stats.totalClasses} />
               <StatCard icon="✏️" title="Tests" value={stats.totalTests} />
               <StatCard icon="👥" title="Students" value={stats.totalStudents} />
@@ -143,70 +169,64 @@ export default function TeacherDashboard() {
           )}
 
           {/* Quick Actions */}
-          <Card>
-            <Card.Header title="Quick Actions" />
-            <Card.Body>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <ActionButton
-                  icon="📚"
-                  label="New Class"
-                  onClick={() => router.push('/teacher/classes')}
-                />
-                <ActionButton
-                  icon="✏️"
-                  label="Create Test"
-                  onClick={() => router.push('/teacher/classes')}
-                />
-                <ActionButton
-                  icon="👥"
-                  label="Manage Students"
-                  onClick={() => router.push('/teacher/classes')}
-                />
-                <ActionButton
-                  icon="📊"
-                  label="View Reports"
-                  onClick={() => router.push('/teacher/analytics')}
-                />
-              </div>
-            </Card.Body>
-          </Card>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-6">Quick Actions</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <ActionButton
+                icon="📚"
+                label="New Class"
+                onClick={() => router.push('/teacher/classes')}
+              />
+              <ActionButton
+                icon="✏️"
+                label="Create Test"
+                onClick={() => router.push('/teacher/classes')}
+              />
+              <ActionButton
+                icon="👥"
+                label="Manage Students"
+                onClick={() => router.push('/teacher/classes')}
+              />
+              <ActionButton
+                icon="📊"
+                label="View Reports"
+                onClick={() => router.push('/teacher/analytics')}
+              />
+            </div>
+          </div>
 
           {/* Recent Classes */}
-          <Card>
-            <Card.Header
-              title={`Recent Classes (${classes.length})`}
-              subtitle="Your active classes"
-            />
-            <Card.Body>
-              {loading ? (
-                <p className="text-gray-500">Loading...</p>
-              ) : classes.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-4">No classes yet</p>
-                  <Button variant="primary" onClick={() => router.push('/teacher/classes')}>
-                    Create Your First Class
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {classes.slice(0, 6).map((cls) => (
-                    <div
-                      key={cls._id || cls.id}
-                      className="p-4 rounded-lg border border-gray-200 hover:border-indigo-500 hover:shadow-md transition cursor-pointer"
-                      onClick={() => router.push(`/teacher/classes/${cls._id || cls.id}`)}
-                    >
-                      <h3 className="font-bold text-gray-900">{cls.name}</h3>
-                      <div className="text-sm text-gray-600 mt-1">{cls.description}</div>
-                      <div className="flex gap-4 mt-3 text-xs text-gray-500">
-                        <span>👥 {cls.students?.length || 0} students</span>
-                        <span>📝 {cls.testCount || 0} tests</span>
-                      </div>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-white mb-2">Recent Classes</h3>
+            <p className="text-gray-400 text-sm mb-6">Your active classes ({classes.length})</p>
+            {loading ? (
+              <p className="text-gray-400">Loading...</p>
+            ) : classes.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-400 mb-4">No classes yet</p>
+                <Button variant="primary" onClick={() => router.push('/teacher/classes')}>
+                  Create Your First Class
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {classes.slice(0, 6).map((cls) => (
+                  <div
+                    key={cls._id || cls.id}
+                    className="p-4 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 hover:border-purple-400/50 transition cursor-pointer"
+                    onClick={() => router.push(`/teacher/classes/${cls._id || cls.id}`)}
+                  >
+                    <h3 className="font-bold text-white">{cls.name}</h3>
+                    <div className="text-sm text-gray-400 mt-1">{cls.description}</div>
+                    <div className="flex gap-4 mt-3 text-xs text-gray-400">
+                      <span>👥 {cls.students?.length || 0} students</span>
+                      <span>📝 {cls.testCount || 0} tests</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -227,7 +247,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-indigo-50 text-gray-700 transition ${
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/20 text-gray-300 hover:text-white transition ${
         collapsed ? 'justify-center' : ''
       }`}
     >
@@ -239,15 +259,17 @@ function NavLink({
 
 function StatCard({ icon, title, value }: { icon: string; title: string; value: number | string }) {
   return (
-    <Card>
-      <Card.Body className="flex items-center justify-between">
+    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition-all">
+      <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600 text-sm">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
+          <p className="text-gray-400 text-sm font-medium mb-2">{title}</p>
+          <p className={`text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent`}>
+            {value}
+          </p>
         </div>
-        <div className="text-4xl">{icon}</div>
-      </Card.Body>
-    </Card>
+        <span className="text-5xl opacity-50">{icon}</span>
+      </div>
+    </div>
   );
 }
 
@@ -263,10 +285,10 @@ function ActionButton({
   return (
     <button
       onClick={onClick}
-      className="p-4 rounded-lg border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition space-y-2"
+      className="p-4 rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 hover:border-purple-400/50 transition space-y-2 group"
     >
-      <div className="text-2xl">{icon}</div>
-      <div className="text-sm font-medium text-gray-900">{label}</div>
+      <div className="text-3xl group-hover:scale-110 transition transform">{icon}</div>
+      <div className="text-sm font-medium text-white group-hover:text-purple-300 transition">{label}</div>
     </button>
   );
 }

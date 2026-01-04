@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 
 interface TestItem {
   id: string;
@@ -50,19 +49,19 @@ export default function TestsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4 md:p-8">
-        <div className="text-center py-12">Loading tests...</div>
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
+        <div className="text-center py-12 text-gray-400">Loading tests...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-gray-900">📝 Available Tests</h1>
-          <p className="text-gray-600 mt-2">Select a test to begin</p>
+          <h1 className="text-4xl font-bold text-white">📝 Available Tests</h1>
+          <p className="text-gray-400 mt-2">Select a test to begin</p>
         </div>
 
         {/* Filter */}
@@ -73,8 +72,8 @@ export default function TestsPage() {
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg font-medium transition ${
                 filter === f
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                  : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
               }`}
             >
               {f === 'all' ? 'All' : f === 'available' ? 'Available' : 'Completed'}
@@ -84,55 +83,55 @@ export default function TestsPage() {
 
         {/* Tests Grid */}
         {tests.length === 0 ? (
-          <Card>
-            <Card.Body>
-              <div className="text-center py-12">
-                <div className="text-4xl mb-4">📚</div>
-                <p className="text-gray-500 text-lg">No tests available yet</p>
-              </div>
-            </Card.Body>
-          </Card>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12">
+            <div className="text-center">
+              <div className="text-4xl mb-4">📚</div>
+              <p className="text-gray-400 text-lg">No tests available yet</p>
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {tests.map((test) => (
-              <Card key={test.id} className="hover:shadow-lg transition cursor-pointer">
-                <Card.Body>
-                  <div className="space-y-3">
-                    <h3 className="text-xl font-bold text-gray-900">{test.title}</h3>
-                    
-                    {test.description && (
-                      <p className="text-gray-600 text-sm">{test.description}</p>
-                    )}
+              <div
+                key={test.id}
+                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:bg-white/15 hover:border-purple-400/50 transition cursor-pointer"
+                onClick={() => handleStartTest(test.id)}
+              >
+                <div className="space-y-3">
+                  <h3 className="text-xl font-bold text-white">{test.title}</h3>
+                  
+                  {test.description && (
+                    <p className="text-gray-400 text-sm">{test.description}</p>
+                  )}
 
-                    <div className="bg-gray-50 rounded-lg p-3 space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Class:</span>
-                        <span className="font-medium">{test.classId?.name}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Duration:</span>
-                        <span className="font-medium">⏱️ {test.duration} minutes</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total Marks:</span>
-                        <span className="font-medium">⭐ {test.totalMarks}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Difficulty:</span>
-                        <span className="font-medium capitalize">{test.difficulty}</span>
-                      </div>
+                  <div className="bg-white/5 rounded-lg p-3 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Class:</span>
+                      <span className="font-medium text-white">{test.classId?.name}</span>
                     </div>
-
-                    <Button
-                      variant="primary"
-                      className="w-full"
-                      onClick={() => handleStartTest(test.id)}
-                    >
-                      Start Test →
-                    </Button>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Duration:</span>
+                      <span className="font-medium text-white">⏱️ {test.duration} minutes</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Total Marks:</span>
+                      <span className="font-medium text-white">⭐ {test.totalMarks}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Difficulty:</span>
+                      <span className="font-medium text-white capitalize">{test.difficulty}</span>
+                    </div>
                   </div>
-                </Card.Body>
-              </Card>
+
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                    onClick={() => handleStartTest(test.id)}
+                  >
+                    Start Test →
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         )}
