@@ -42,7 +42,7 @@ export async function GET(
 
     // Get student details
     const studentIds = results.map((r: any) => r.studentId);
-    const students = await User.find({ _id: { $in: studentIds } })
+    const students: any[] = await User.find({ _id: { $in: studentIds } })
       .select('firstName lastName email')
       .lean();
     

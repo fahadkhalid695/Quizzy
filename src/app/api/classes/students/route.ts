@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     // Get student details - handle both string and ObjectId formats
     const studentIds = classDoc.students || [];
-    const students = await User.find({ 
+    const students: any[] = await User.find({ 
       $or: [
         { _id: { $in: studentIds } },
         { _id: { $in: studentIds.map((id: any) => id?.toString()).filter(Boolean) } }

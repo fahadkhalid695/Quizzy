@@ -35,13 +35,13 @@ export async function GET(request: NextRequest) {
       query.role = role
     }
 
-    const users = await User.find(query)
+    const users: any[] = await User.find(query)
       .select('_id firstName lastName email role')
       .limit(10)
       .lean()
 
     return NextResponse.json({
-      users: users.map(u => ({
+      users: users.map((u: any) => ({
         id: u._id,
         firstName: u.firstName,
         lastName: u.lastName,

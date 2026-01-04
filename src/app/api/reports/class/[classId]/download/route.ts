@@ -45,20 +45,20 @@ export async function GET(
 
     // Get test details
     const testIds = [...new Set(results.map((r: any) => r.testId))];
-    const tests = await Test.find({ 
+    const tests: any[] = await Test.find({ 
       $or: [
         { _id: { $in: testIds } },
-        { _id: { $in: testIds.map(id => id?.toString()).filter(Boolean) } }
+        { _id: { $in: testIds.map((id: any) => id?.toString()).filter(Boolean) } }
       ]
     }).select('title duration difficulty totalMarks').lean();
     const testMap = new Map(tests.map((t: any) => [t._id.toString(), t]));
 
     // Get student details
     const studentIds = [...new Set(results.map((r: any) => r.studentId))];
-    const students = await User.find({ 
+    const students: any[] = await User.find({ 
       $or: [
         { _id: { $in: studentIds } },
-        { _id: { $in: studentIds.map(id => id?.toString()).filter(Boolean) } }
+        { _id: { $in: studentIds.map((id: any) => id?.toString()).filter(Boolean) } }
       ]
     })
       .select('firstName lastName email')

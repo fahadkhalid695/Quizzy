@@ -29,14 +29,14 @@ export async function GET(request: NextRequest) {
     const testIds = [...new Set(results.map((r: any) => r.testId))];
     
     // Fetch test details
-    const tests = await Test.find({ 
+    const tests: any[] = await Test.find({ 
       $or: [
         { _id: { $in: testIds } },
-        { _id: { $in: testIds.map(id => id?.toString()).filter(Boolean) } }
+        { _id: { $in: testIds.map((id: any) => id?.toString()).filter(Boolean) } }
       ]
     }).select('title totalMarks duration difficulty').lean();
     
-    const testMap = new Map(tests.map(t => [t._id.toString(), t]));
+    const testMap = new Map(tests.map((t: any) => [t._id.toString(), t]));
 
     const formattedResults = results.map((result: any) => {
       const test = testMap.get(result.testId?.toString());
