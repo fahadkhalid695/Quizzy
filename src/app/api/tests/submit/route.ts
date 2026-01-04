@@ -19,9 +19,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only students can submit tests' }, { status: 403 });
     }
 
-    const { testId, classId, answers } = await request.json();
+    const body = await request.json();
+    const { testId, classId, answers } = body;
+    
+    console.log('Submit request:', { testId, classId, answersCount: answers?.length });
 
     if (!testId || !classId || !answers) {
+      console.log('Missing fields:', { hasTestId: !!testId, hasClassId: !!classId, hasAnswers: !!answers });
       return NextResponse.json(
         { error: 'Test ID, class ID, and answers are required' },
         { status: 400 }

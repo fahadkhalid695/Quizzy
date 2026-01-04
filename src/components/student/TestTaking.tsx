@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
@@ -22,15 +22,18 @@ interface TestTakingProps {
   onSubmit?: (resultId: string) => void;
 }
 
-export default function TestTaking({ testId, classId, onSubmit }: TestTakingProps) {
+export default function TestTaking({ testId, classId: propClassId, onSubmit }: TestTakingProps) {
   const [test, setTest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [timerStarted, setTimerStarted] = useState(false);
   const [answers, setAnswers] = useState<Map<string, any>>(new Map());
   const [tabWarnings, setTabWarnings] = useState(0);
+  const [classId, setClassId] = useState(propClassId);
   const notify = useNotify();
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch test
   useEffect(() => {
@@ -38,7 +41,19 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
       try {
         const response = await api.get<{ test: any }>(`/api/tests/${testId}`);
         setTest(response.test);
-        setTimeLeft((response.test.duration || 60) * 60); // Convert to seconds
+        const duration = (response.test.duration || 60) * 60; // Convert to seconds
+        setTimeLeft(duration);
+        
+        // Get classId from test if not provided in props
+        if (!propClassId && response.test.classId) {
+          const testClassId = typeof response.test.classId === 'object' 
+            ? response.test.classId._id || response.test.classId.id 
+            : response.test.classId;
+          setClassId(testClassId);
+        }
+        
+        // Start timer after test is loaded
+        setTimerStarted(true);
       } catch (error) {
         notify.error('Failed to load test');
       } finally {
@@ -47,24 +62,34 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
     };
 
     fetchTest();
-  }, [testId, notify]);
+  }, [testId, notify, propClassId]);
 
-  // Timer
+  // Timer - runs independently once started
   useEffect(() => {
-    if (timeLeft <= 0 || !test) return;
+    if (!timerStarted || timeLeft <= 0) return;
 
-    const interval = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          handleSubmit();
+          if (timerRef.current) clearInterval(timerRef.current);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [test]);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [timerStarted]);
+
+  // Auto-submit when time runs out
+  useEffect(() => {
+    if (timerStarted && timeLeft === 0 && test && !submitting) {
+      notify.warning('Time is up! Submitting your test...');
+      handleSubmitInternal();
+    }
+  }, [timeLeft, timerStarted, test, submitting]);
 
   // Tab visibility detection - AUTO SUBMIT on tab switch
   useEffect(() => {
@@ -74,7 +99,7 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
           const newWarnings = prev + 1;
           if (newWarnings >= 3) {
             notify.error('Too many tab switches detected. Submitting test...');
-            handleSubmit();
+            handleSubmitInternal();
           } else {
             notify.warning(`Warning: Do not switch tabs! (${newWarnings}/3)`);
           }
@@ -93,20 +118,30 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
     setAnswers(newAnswers);
   };
 
-  const handleSubmit = useCallback(async () => {
-    if (submitting) return;
+  // Internal submit function (not memoized, for use in effects)
+  const handleSubmitInternal = async () => {
+    if (submitting || !test) return;
     setSubmitting(true);
 
     try {
       const answersArray = test.questions.map((q: Question) => ({
         questionId: q._id,
         answer: answers.get(q._id) || '',
-        timeSpent: 0, // Could track time per question
+        timeSpent: 0,
       }));
+
+      // Use classId from state (either from props or from test data)
+      const submitClassId = classId || (test.classId?._id || test.classId?.id || test.classId);
+      
+      if (!submitClassId) {
+        notify.error('Class ID is missing. Please go back and try again.');
+        setSubmitting(false);
+        return;
+      }
 
       const response = await api.post<{ result: { id: string } }>('/api/tests/submit', {
         testId,
-        classId,
+        classId: submitClassId,
         answers: answersArray,
       });
 
@@ -118,9 +153,12 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
       }
     } catch (error) {
       notify.error(error instanceof Error ? error.message : 'Failed to submit test');
-    } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleSubmit = useCallback(() => {
+    handleSubmitInternal();
   }, [test, answers, testId, classId, notify, onSubmit, submitting]);
 
   if (loading) {
