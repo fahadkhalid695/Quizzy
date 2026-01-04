@@ -4,6 +4,61 @@ import { verifyToken } from '@/lib/auth-middleware';
 import Class from '@/models/Class';
 import User from '@/models/User';
 
+// GET - Get students in a class
+export async function GET(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const classId = searchParams.get('classId');
+
+    if (!classId) {
+      return NextResponse.json({ error: 'Class ID is required' }, { status: 400 });
+    }
+
+    const classDoc = await Class.findById(classId);
+    if (!classDoc) {
+      return NextResponse.json({ error: 'Class not found' }, { status: 404 });
+    }
+
+    // Verify teacher owns this class
+    if (classDoc.teacherId.toString() !== payload.userId) {
+      return NextResponse.json(
+        { error: 'Only class teacher can view students' },
+        { status: 403 }
+      );
+    }
+
+    // Get student details
+    const studentIds = classDoc.students || [];
+    const students = await User.find({ _id: { $in: studentIds } })
+      .select('firstName lastName email')
+      .lean();
+
+    const formattedStudents = students.map((student: any) => ({
+      id: student._id.toString(),
+      firstName: student.firstName,
+      lastName: student.lastName,
+      email: student.email,
+    }));
+
+    return NextResponse.json({ students: formattedStudents });
+  } catch (error) {
+    console.error('Get students error:', error);
+    return NextResponse.json({ error: 'Failed to get students' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
@@ -88,7 +143,21 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { classId, studentId } = await request.json();
+    // Support both query params and request body for backwards compatibility
+    const { searchParams } = new URL(request.url);
+    let classId = searchParams.get('classId');
+    let studentId = searchParams.get('studentId');
+
+    // If not in query params, try request body
+    if (!classId || !studentId) {
+      try {
+        const body = await request.json();
+        classId = body.classId || classId;
+        studentId = body.studentId || studentId;
+      } catch (e) {
+        // Body parsing failed, continue with query params
+      }
+    }
 
     if (!classId || !studentId) {
       return NextResponse.json(
@@ -113,6 +182,11 @@ export async function DELETE(request: NextRequest) {
     // Remove student
     classDoc.students = classDoc.students.filter((id: any) => id.toString() !== studentId);
     await classDoc.save();
+
+    // Also remove class from student's enrolled classes
+    await User.findByIdAndUpdate(studentId, {
+      $pull: { enrolledClasses: classId },
+    });
 
     await classDoc.populate('students', 'firstName lastName email');
 

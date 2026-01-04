@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore, useHasHydrated } from '@/lib/store'
 import Button from '@/components/ui/Button'
 import Link from 'next/link'
+import ClassInvitations from '@/components/student/ClassInvitations'
+import { api } from '@/lib/api-client'
 
 export default function StudentDashboard() {
   const router = useRouter()
@@ -12,6 +14,24 @@ export default function StudentDashboard() {
   const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [pendingInvitations, setPendingInvitations] = useState(0)
+  const [activeTab, setActiveTab] = useState<'overview' | 'invitations'>('overview')
+
+  // Fetch pending invitation count
+  useEffect(() => {
+    if (hasHydrated && user) {
+      fetchInvitationCount()
+    }
+  }, [hasHydrated, user])
+
+  const fetchInvitationCount = async () => {
+    try {
+      const response = await api.get<{ invitations: any[] }>('/api/invitations/student?status=pending')
+      setPendingInvitations(response.invitations?.length || 0)
+    } catch (error) {
+      console.error('Failed to fetch invitation count:', error)
+    }
+  }
 
   // Redirect if not authenticated after hydration
   useEffect(() => {
@@ -51,7 +71,8 @@ export default function StudentDashboard() {
 
   const navItems = [
     { icon: '🏠', label: 'Dashboard', href: '/student/dashboard', active: true },
-    { icon: '📝', label: 'Available Tests', href: '/student/tests' },
+    { icon: '�', label: 'Invitations', href: '#', badge: pendingInvitations, onClick: () => setActiveTab('invitations') },
+    { icon: '�📝', label: 'Available Tests', href: '/student/tests' },
     { icon: '📈', label: 'My Results', href: '/student/results' },
     { icon: '🏆', label: 'Leaderboard', href: '/student/leaderboard' },
     { icon: '⚙️', label: 'Settings', href: '/student/settings' },
@@ -96,25 +117,42 @@ export default function StudentDashboard() {
 
         {/* Navigation */}
         <nav className="flex-1 py-4 px-3 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                item.active
-                  ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <span className={`text-xl ${item.active ? '' : 'group-hover:scale-110 transition-transform'}`}>
-                {item.icon}
-              </span>
-              {sidebarOpen && <span className="font-medium">{item.label}</span>}
-              {item.active && sidebarOpen && (
-                <div className="ml-auto w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-              )}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = item.active || (item.label === 'Invitations' && activeTab === 'invitations')
+            const Component = item.onClick ? 'button' : Link
+            const props = item.onClick 
+              ? { onClick: item.onClick, className: 'w-full' }
+              : { href: item.href }
+            
+            return (
+              <Component
+                key={item.label}
+                {...props as any}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group w-full ${
+                  isActive
+                    ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white'
+                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                <span className={`text-xl ${isActive ? '' : 'group-hover:scale-110 transition-transform'}`}>
+                  {item.icon}
+                </span>
+                {sidebarOpen && (
+                  <>
+                    <span className="font-medium">{item.label}</span>
+                    {item.badge && item.badge > 0 && (
+                      <span className="ml-auto px-2 py-0.5 text-xs font-bold bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full animate-pulse">
+                        {item.badge}
+                      </span>
+                    )}
+                  </>
+                )}
+                {isActive && sidebarOpen && !item.badge && (
+                  <div className="ml-auto w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                )}
+              </Component>
+            )
+          })}
         </nav>
 
         {/* User Card */}
@@ -147,14 +185,42 @@ export default function StudentDashboard() {
           <div className="mb-8 animate-fade-in">
             <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
               <span>🏠</span> Dashboard
+              {activeTab === 'invitations' && (
+                <>
+                  <span>/</span>
+                  <span>📨 Invitations</span>
+                </>
+              )}
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-              Welcome back, <span className="gradient-text">{user.firstName}</span>! 👋
-            </h1>
-            <p className="text-gray-400 text-lg">Ready to ace some quizzes today?</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+                  {activeTab === 'overview' ? (
+                    <>Welcome back, <span className="gradient-text">{user.firstName}</span>! 👋</>
+                  ) : (
+                    <>Class Invitations 📨</>
+                  )}
+                </h1>
+                <p className="text-gray-400 text-lg">
+                  {activeTab === 'overview' ? 'Ready to ace some quizzes today?' : 'Manage your class invitations and join new classes'}
+                </p>
+              </div>
+              {activeTab === 'invitations' && (
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className="px-4 py-2 bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-all flex items-center gap-2"
+                >
+                  ← Back to Dashboard
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Stats Grid */}
+          {activeTab === 'invitations' ? (
+            <ClassInvitations />
+          ) : (
+            <>
+              {/* Stats Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {stats.map((stat, i) => (
               <div
@@ -295,6 +361,8 @@ export default function StudentDashboard() {
               </div>
             </div>
           </div>
+            </>
+          )}
         </div>
       </main>
     </div>
