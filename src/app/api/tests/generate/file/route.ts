@@ -1,54 +1,219 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateQuestionsFromText } from '@/lib/gemini';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { verifyToken } from '@/lib/auth-middleware';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify auth
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload || payload.role !== 'teacher') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const numQuestions = parseInt(formData.get('numQuestions') as string) || 5;
+    const numQuestions = parseInt(formData.get('numQuestions') as string) || 10;
     const difficulty = (formData.get('difficulty') as string || 'medium') as 'easy' | 'medium' | 'hard';
+    const questionTypesStr = formData.get('questionTypes') as string;
+    const questionTypes = questionTypesStr ? JSON.parse(questionTypesStr) : ['multiple_choice'];
 
     if (!file) {
       return NextResponse.json({ error: 'File is required' }, { status: 400 });
     }
 
-    // Convert file to text (simplified - in production, use proper libraries)
-    let text = '';
+    let extractedContent = '';
     const fileType = file.type;
+    const fileName = file.name.toLowerCase();
 
-    if (fileType === 'application/pdf') {
-      // For PDF files, use pdf-parse or pdfjs
-      // This is a simplified example
-      text = 'PDF content extracted'; // In real implementation, parse PDF properly
-    } else if (fileType.includes('image')) {
-      // For images, could use OCR
-      text = 'Image content extracted';
-    } else if (
+    // Use Gemini Vision for images
+    if (fileType.startsWith('image/')) {
+      const imageBuffer = await file.arrayBuffer();
+      const base64Image = Buffer.from(imageBuffer).toString('base64');
+      
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType: fileType,
+            data: base64Image,
+          },
+        },
+        'Extract ALL text content from this image. If it contains diagrams, charts, or visual elements, describe them in detail. Include any formulas, equations, or special notation. Return the complete extracted content.',
+      ]);
+      
+      const response = await result.response;
+      extractedContent = response.text();
+    }
+    // For PDFs - use Gemini to process
+    else if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
+      const pdfBuffer = await file.arrayBuffer();
+      const base64Pdf = Buffer.from(pdfBuffer).toString('base64');
+      
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType: 'application/pdf',
+            data: base64Pdf,
+          },
+        },
+        'Extract ALL text content from this PDF document. Include headings, paragraphs, lists, tables, and any other text. Preserve the structure and organization of the content. Return the complete extracted content.',
+      ]);
+      
+      const response = await result.response;
+      extractedContent = response.text();
+    }
+    // For plain text files
+    else if (fileType === 'text/plain' || fileName.endsWith('.txt')) {
+      extractedContent = await file.text();
+    }
+    // For Word documents
+    else if (
       fileType.includes('word') ||
-      fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      fileName.endsWith('.docx') ||
+      fileName.endsWith('.doc')
     ) {
-      // For DOCX
-      text = 'Document content extracted';
-    } else if (
+      // Convert to buffer and send to Gemini
+      const docBuffer = await file.arrayBuffer();
+      const base64Doc = Buffer.from(docBuffer).toString('base64');
+      
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType: fileType || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            data: base64Doc,
+          },
+        },
+        'Extract ALL text content from this Word document. Include headings, paragraphs, lists, tables, and any other text. Preserve the structure. Return the complete extracted content.',
+      ]);
+      
+      const response = await result.response;
+      extractedContent = response.text();
+    }
+    // For PowerPoint
+    else if (
       fileType.includes('presentation') ||
-      fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      fileName.endsWith('.pptx') ||
+      fileName.endsWith('.ppt')
     ) {
-      // For PPTX
-      text = 'Presentation content extracted';
-    } else {
-      text = await file.text();
+      const pptBuffer = await file.arrayBuffer();
+      const base64Ppt = Buffer.from(pptBuffer).toString('base64');
+      
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      
+      const result = await model.generateContent([
+        {
+          inlineData: {
+            mimeType: fileType || 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            data: base64Ppt,
+          },
+        },
+        'Extract ALL text content from this PowerPoint presentation. Include slide titles, bullet points, notes, and any text in diagrams. List content slide by slide. Return the complete extracted content.',
+      ]);
+      
+      const response = await result.response;
+      extractedContent = response.text();
+    }
+    else {
+      // Try to read as text
+      try {
+        extractedContent = await file.text();
+      } catch {
+        return NextResponse.json(
+          { error: 'Unsupported file type. Please upload PDF, images, Word, PowerPoint, or text files.' },
+          { status: 400 }
+        );
+      }
     }
 
-    const questions = await generateQuestionsFromText(text, numQuestions, difficulty);
+    if (!extractedContent || extractedContent.trim().length < 50) {
+      return NextResponse.json(
+        { error: 'Could not extract sufficient content from the file. Please try a different file.' },
+        { status: 400 }
+      );
+    }
+
+    // Generate questions from extracted content
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    
+    const questionTypeInstructions = questionTypes.map((type: string) => {
+      if (type === 'multiple_choice') return 'Multiple choice questions with 4 options';
+      if (type === 'true_false') return 'True/False questions';
+      if (type === 'short_answer') return 'Short answer questions requiring brief explanations';
+      return type;
+    }).join(', ');
+
+    const prompt = `
+You are an expert educator creating quiz questions from educational content.
+
+Content extracted from uploaded file:
+---
+${extractedContent.substring(0, 15000)}
+---
+
+Create ${numQuestions} ${difficulty} difficulty educational questions based on this content.
+Question types to include: ${questionTypeInstructions}
+
+Requirements:
+1. Questions should test understanding of the key concepts
+2. Vary the question types as specified
+3. For multiple choice, provide 4 options with only one correct answer
+4. Include detailed explanations for each answer
+5. Ensure questions cover different parts of the content
+
+Return a JSON array:
+[
+  {
+    "type": "multiple_choice" | "true_false" | "short_answer",
+    "question": "Clear, well-formed question",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice, ["True", "False"] for true_false, null for short_answer),
+    "correctAnswer": "The correct answer exactly as it appears in options",
+    "explanation": "Detailed explanation of why this is correct and why other options are wrong",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  }
+]
+
+Return ONLY valid JSON array, no additional text.
+    `;
+
+    const questionsResult = await model.generateContent(prompt);
+    const questionsResponse = await questionsResult.response;
+    const questionsText = questionsResponse.text();
+
+    // Parse JSON from response
+    const jsonMatch = questionsText.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      return NextResponse.json(
+        { error: 'Failed to generate questions from the content. Please try again.' },
+        { status: 500 }
+      );
+    }
+
+    const questions = JSON.parse(jsonMatch[0]);
 
     return NextResponse.json({
       success: true,
       questions,
+      extractedContentPreview: extractedContent.substring(0, 500) + '...',
     });
   } catch (error) {
     console.error('Generate from file error:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to generate questions' },
+      { error: error instanceof Error ? error.message : 'Failed to generate questions from file' },
       { status: 500 }
     );
   }

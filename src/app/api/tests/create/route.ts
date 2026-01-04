@@ -28,6 +28,12 @@ export async function POST(request: NextRequest) {
       totalMarks,
       startTime,
       endTime,
+      // AI and Dynamic test fields
+      aiGenerated,
+      sourceType,
+      sourceTopic,
+      isDynamic,
+      dynamicSettings,
     } = await request.json();
 
     // Validation
@@ -70,6 +76,24 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    // Prepare dynamic settings if enabled
+    let finalDynamicSettings = null;
+    if (isDynamic && dynamicSettings) {
+      // Validate dynamic settings
+      const questionsPerStudent = Math.min(
+        dynamicSettings.questionsPerStudent || questions.length,
+        questions.length
+      );
+      
+      finalDynamicSettings = {
+        questionPool: dynamicSettings.questionPool || validatedQuestions,
+        questionsPerStudent,
+        shuffleQuestions: dynamicSettings.shuffleQuestions !== false,
+        shuffleOptions: dynamicSettings.shuffleOptions !== false,
+        regenerateOnRetake: dynamicSettings.regenerateOnRetake || false,
+      };
+    }
+
     const newTest = new Test({
       title: title.trim(),
       description: description?.trim() || '',
@@ -78,10 +102,19 @@ export async function POST(request: NextRequest) {
       questions: validatedQuestions,
       duration: duration || 60, // minutes
       difficulty: difficulty || 'medium',
-      totalMarks: totalMarks || calculatedTotalMarks,
+      totalMarks: isDynamic && finalDynamicSettings 
+        ? Math.round((calculatedTotalMarks / questions.length) * finalDynamicSettings.questionsPerStudent)
+        : (totalMarks || calculatedTotalMarks),
       isPublished: false,
       startTime: startTime ? new Date(startTime) : null,
       endTime: endTime ? new Date(endTime) : null,
+      // AI metadata
+      aiGenerated: aiGenerated || false,
+      sourceType: sourceType || 'manual',
+      sourceTopic: sourceTopic || null,
+      // Dynamic test settings
+      isDynamic: isDynamic || false,
+      dynamicSettings: finalDynamicSettings,
     });
 
     await newTest.save();
@@ -97,6 +130,8 @@ export async function POST(request: NextRequest) {
           duration: newTest.duration,
           questionCount: newTest.questions.length,
           isPublished: newTest.isPublished,
+          isDynamic: newTest.isDynamic,
+          aiGenerated: newTest.aiGenerated,
           createdAt: newTest.createdAt,
         },
       },

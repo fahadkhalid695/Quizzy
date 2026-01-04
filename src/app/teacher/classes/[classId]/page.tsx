@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
-import TestForm from '@/components/teacher/TestForm';
+import TestFormAI from '@/components/teacher/TestFormAI';
 import Leaderboard from '@/components/teacher/Leaderboard';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/common/BackButton';
@@ -76,7 +76,7 @@ export default function ClassDetailPage() {
   const fetchTests = async () => {
     try {
       setLoading(true);
-      const response = await api.get<{ tests: any[] }>(`/api/tests/list?classId=${classId}`);
+      const response = await api.get<{ tests: any[] }>(`/api/tests/list?classId=${classId}&showAll=true`);
       setTests(response.tests || []);
     } catch (error) {
       notify.error('Failed to load tests');
@@ -261,28 +261,29 @@ export default function ClassDetailPage() {
                 onClick={() => setShowTestForm(true)}
                 className="w-full md:w-auto"
               >
-                + Create Test
+                + Create Test with AI
               </Button>
             )}
 
             {showTestForm && (
-              <TestForm
+              <TestFormAI
                 classId={classId}
                 onSuccess={() => {
                   setShowTestForm(false);
                   fetchTests();
                 }}
+                onCancel={() => setShowTestForm(false)}
               />
             )}
 
-            {loading ? (
+            {!showTestForm && loading ? (
               <div className="text-center py-8 text-gray-400">Loading tests...</div>
-            ) : tests.length === 0 ? (
+            ) : !showTestForm && tests.length === 0 ? (
               <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12 text-center">
                 <div className="text-4xl mb-4">📝</div>
                 <p className="text-gray-400">No tests yet. Create your first test!</p>
               </div>
-            ) : (
+            ) : !showTestForm && (
               <div className="grid gap-4">
                 {tests.map((test) => (
                   <div 
@@ -291,11 +292,23 @@ export default function ClassDetailPage() {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-white">{test.title}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-lg font-bold text-white">{test.title}</h3>
+                          {test.aiGenerated && (
+                            <span className="px-2 py-0.5 text-xs bg-purple-500/20 text-purple-300 rounded-full">
+                              🤖 AI Generated
+                            </span>
+                          )}
+                          {test.isDynamic && (
+                            <span className="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded-full">
+                              🔀 Dynamic
+                            </span>
+                          )}
+                        </div>
                         {test.description && (
                           <p className="text-gray-400 text-sm mt-1">{test.description}</p>
                         )}
-                        <div className="flex gap-4 mt-3 text-sm">
+                        <div className="flex flex-wrap gap-3 mt-3 text-sm">
                           <span className="text-gray-400">
                             📝 {test.questionCount} questions
                           </span>

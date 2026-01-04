@@ -70,6 +70,39 @@ const testSchema = new Schema<ITestDocument>(
       type: Boolean,
       default: false,
     },
+    // AI Generation metadata
+    aiGenerated: {
+      type: Boolean,
+      default: false,
+    },
+    sourceType: {
+      type: String,
+      enum: ['manual', 'topic', 'file', 'text', 'web'],
+      default: 'manual',
+    },
+    sourceTopic: String,
+    sourceContent: String,
+    // Dynamic Test Settings
+    isDynamic: {
+      type: Boolean,
+      default: false,
+    },
+    dynamicSettings: {
+      questionPool: [questionSchema], // Pool of questions for dynamic generation
+      questionsPerStudent: Number,
+      shuffleQuestions: {
+        type: Boolean,
+        default: true,
+      },
+      shuffleOptions: {
+        type: Boolean,
+        default: true,
+      },
+      regenerateOnRetake: {
+        type: Boolean,
+        default: false,
+      },
+    },
   },
   { timestamps: true }
 )

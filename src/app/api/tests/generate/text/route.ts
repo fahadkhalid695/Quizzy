@@ -1,17 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateQuestionsFromText } from '@/lib/gemini';
+import { verifyToken } from '@/lib/auth-middleware';
 
 export async function POST(request: NextRequest) {
   try {
-    const { content, numQuestions, difficulty } = await request.json();
+    // Verify auth
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    if (!content) {
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
+    const payload = await verifyToken(token);
+    if (!payload || payload.role !== 'teacher') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { text, content, numQuestions, difficulty } = await request.json();
+    
+    // Support both 'text' and 'content' field names
+    const inputText = text || content;
+
+    if (!inputText) {
+      return NextResponse.json({ error: 'Text content is required' }, { status: 400 });
     }
 
     const questions = await generateQuestionsFromText(
-      content,
-      numQuestions || 5,
+      inputText,
+      numQuestions || 10,
       difficulty || 'medium'
     );
 
@@ -27,3 +42,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const maxDuration = 60;

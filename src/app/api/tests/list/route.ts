@@ -10,12 +10,30 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
     const classId = request.nextUrl.searchParams.get('classId');
+    const showAll = request.nextUrl.searchParams.get('showAll') === 'true';
+    
     if (!classId) {
       return NextResponse.json({ error: 'Class ID is required' }, { status: 400 });
     }
 
-    const tests = await Test.find({ classId, isPublished: true })
+    // If showAll is true and user is teacher, show all tests (including drafts)
+    let query: any = { classId };
+    
+    if (token && showAll) {
+      const payload = await verifyToken(token);
+      if (payload && payload.role === 'teacher') {
+        // Teacher can see all tests
+        // query remains { classId }
+      } else {
+        query.isPublished = true;
+      }
+    } else {
+      query.isPublished = true;
+    }
+
+    const tests = await Test.find(query)
       .populate('classId', 'name')
       .sort({ createdAt: -1 });
 
@@ -30,6 +48,10 @@ export async function GET(request: NextRequest) {
         totalMarks: test.totalMarks,
         isPublished: test.isPublished,
         classId: test.classId,
+        questionCount: test.questions?.length || 0,
+        aiGenerated: test.aiGenerated || false,
+        sourceType: test.sourceType || 'manual',
+        isDynamic: test.isDynamic || false,
         createdAt: test.createdAt,
       })),
     });
