@@ -30,7 +30,6 @@
     "react-hot-toast": "^2.4.0",
     "clsx": "^2.0.0",
     "tailwind-merge": "^2.2.0",
-    "next-cloudinary": "^4.25.0",
     "jose": "^4.15.4"
   },
   "devDependencies": {
