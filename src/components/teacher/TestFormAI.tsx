@@ -111,12 +111,16 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
 
   // Generate questions from topic
   const generateFromTopic = async () => {
+    console.log('generateFromTopic called', { topic: aiSettings.topic });
+    
     if (!aiSettings.topic.trim()) {
       notify.error('Please enter a topic');
       return;
     }
     
     setGenerating(true);
+    console.log('Starting generation...');
+    
     try {
       const response = await api.post<{
         questions: Question[];
@@ -127,6 +131,8 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
         difficulty: aiSettings.difficulty,
         questionTypes: aiSettings.questionTypes,
       });
+      
+      console.log('Response received:', response);
       
       const generatedQuestions = response.questions.map((q: any, idx: number) => ({
         ...q,
@@ -143,6 +149,7 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
       notify.success(`Generated ${generatedQuestions.length} questions!`);
       setStep('questions');
     } catch (error) {
+      console.error('Generation error:', error);
       notify.error(error instanceof Error ? error.message : 'Failed to generate questions');
     } finally {
       setGenerating(false);
@@ -151,18 +158,24 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
 
   // Generate questions from text
   const generateFromText = async () => {
+    console.log('generateFromText called', { text: aiSettings.text?.substring(0, 100) });
+    
     if (!aiSettings.text.trim()) {
       notify.error('Please enter some text');
       return;
     }
     
     setGenerating(true);
+    console.log('Starting text generation...');
+    
     try {
       const response = await api.post<{ questions: Question[] }>('/api/tests/generate/text', {
         text: aiSettings.text,
         numQuestions: aiSettings.numQuestions,
         difficulty: aiSettings.difficulty,
       });
+      
+      console.log('Text generation response:', response);
       
       const generatedQuestions = response.questions.map((q: any, idx: number) => ({
         ...q,
@@ -173,6 +186,7 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
       notify.success(`Generated ${generatedQuestions.length} questions!`);
       setStep('questions');
     } catch (error) {
+      console.error('Text generation error:', error);
       notify.error(error instanceof Error ? error.message : 'Failed to generate questions');
     } finally {
       setGenerating(false);
@@ -181,12 +195,16 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
 
   // Generate questions from file
   const generateFromFile = async () => {
+    console.log('generateFromFile called', { fileName: uploadedFile?.name });
+    
     if (!uploadedFile) {
       notify.error('Please upload a file');
       return;
     }
     
     setGenerating(true);
+    console.log('Starting file generation...');
+    
     try {
       const formData = new FormData();
       formData.append('file', uploadedFile);
@@ -194,15 +212,31 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
       formData.append('difficulty', aiSettings.difficulty);
       formData.append('questionTypes', JSON.stringify(aiSettings.questionTypes));
       
+      const token = localStorage.getItem('auth-storage');
+      let authToken = '';
+      if (token) {
+        try {
+          const parsed = JSON.parse(token);
+          authToken = parsed.state?.token || '';
+        } catch (e) {
+          console.error('Error parsing token:', e);
+        }
+      }
+      
+      console.log('Sending file to API...');
+      
       const response = await fetch('/api/tests/generate/file', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${authToken}`,
         },
         body: formData,
       });
       
+      console.log('File API response status:', response.status);
+      
       const data = await response.json();
+      console.log('File API response:', data);
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to generate questions');
@@ -222,6 +256,7 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
       notify.success(`Generated ${generatedQuestions.length} questions from ${uploadedFile.name}!`);
       setStep('questions');
     } catch (error) {
+      console.error('File generation error:', error);
       notify.error(error instanceof Error ? error.message : 'Failed to generate questions');
     } finally {
       setGenerating(false);
@@ -284,6 +319,8 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
 
   // Submit test
   const handleSubmit = async () => {
+    console.log('handleSubmit called', { testData, questions, classId });
+    
     if (!testData.title.trim()) {
       notify.error('Please enter a test title');
       return;
@@ -295,8 +332,10 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
     }
 
     setLoading(true);
+    console.log('Creating test...');
+    
     try {
-      await api.post('/api/tests/create', {
+      const payload = {
         ...testData,
         classId,
         questions: questions.map(q => ({
@@ -324,11 +363,17 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
           })),
           ...dynamicSettings,
         } : undefined,
-      });
+      };
       
+      console.log('Test payload:', payload);
+      
+      await api.post('/api/tests/create', payload);
+      
+      console.log('Test created successfully');
       notify.success('Test created successfully!');
       onSuccess?.();
     } catch (error) {
+      console.error('Create test error:', error);
       notify.error(error instanceof Error ? error.message : 'Failed to create test');
     } finally {
       setLoading(false);

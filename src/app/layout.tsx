@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import '@/styles/globals.css'
+import Providers from '@/components/common/Providers'
 
 export const metadata: Metadata = {
   title: 'QuizMaster - AI-Powered Quiz Platform',
@@ -27,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="bg-slate-900 text-white antialiased">
-        <div className="min-h-screen">{children}</div>
+        <Providers>
+          <div className="min-h-screen">{children}</div>
+        </Providers>
       </body>
     </html>
   )

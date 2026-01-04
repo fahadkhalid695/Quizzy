@@ -37,24 +37,36 @@ export async function apiCall<T>(
   // Ensure endpoint starts with /
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
 
-  const response = await fetch(normalizedEndpoint, {
-    method: options.method || 'GET',
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-    ...(options.body && { body: JSON.stringify(options.body) }),
-  })
+  console.log('API Call:', options.method || 'GET', normalizedEndpoint);
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      useAuthStore.getState().logout()
+  try {
+    const response = await fetch(normalizedEndpoint, {
+      method: options.method || 'GET',
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+      ...(options.body && { body: JSON.stringify(options.body) }),
+    })
+
+    console.log('API Response status:', response.status);
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        useAuthStore.getState().logout()
+      }
+      const error = await response.json()
+      console.error('API Error:', error);
+      throw new Error(error.error || 'API Error')
     }
-    const error = await response.json()
-    throw new Error(error.error || 'API Error')
-  }
 
-  return response.json()
+    const data = await response.json()
+    console.log('API Response data:', data);
+    return data
+  } catch (error) {
+    console.error('API Call failed:', error);
+    throw error;
+  }
 }
 
 // Helper functions
