@@ -45,38 +45,43 @@ export default function ClassForm({ onSuccess, onCancel }: ClassFormProps) {
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <Card.Header title="Create New Class" />
-      <Card.Body>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Class Name"
+    <div className="w-full max-w-md bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6">
+      <h2 className="text-xl font-bold text-white mb-6">Create New Class</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Class Name</label>
+          <input
+            type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
             placeholder="e.g., Biology 101"
             required
+            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
-          <TextArea
-            label="Description"
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+          <textarea
             name="description"
             value={formData.description}
             onChange={handleChange}
             placeholder="Optional: Add class details"
             rows={4}
+            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
           />
-          <div className="flex gap-2">
-            <Button type="submit" variant="primary" isLoading={loading}>
-              Create Class
+        </div>
+        <div className="flex gap-2">
+          <Button type="submit" variant="primary" isLoading={loading}>
+            Create Class
+          </Button>
+          {onCancel && (
+            <Button type="button" variant="secondary" onClick={onCancel}>
+              Cancel
             </Button>
-            {onCancel && (
-              <Button type="button" variant="secondary" onClick={onCancel}>
-                Cancel
-              </Button>
-            )}
-          </div>
-        </form>
-      </Card.Body>
-    </Card>
+          )}
+        </div>
+      </form>
+    </div>
   );
 }

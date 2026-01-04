@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import ClassForm from '@/components/teacher/ClassForm';
 import ClassList from '@/components/teacher/ClassList';
-import Card from '@/components/ui/Card';
+import BackButton from '@/components/common/BackButton';
 
 export default function ClassesPage() {
   const [showForm, setShowForm] = useState(false);
@@ -12,6 +12,11 @@ export default function ClassesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Back Button */}
+        <div className="flex items-center gap-4">
+          <BackButton href="/teacher/dashboard" label="Dashboard" />
+        </div>
+        
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

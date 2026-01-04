@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
+import BackButton from '@/components/common/BackButton';
 
 interface TestItem {
   id: string;
@@ -58,6 +59,11 @@ export default function TestsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto space-y-6">
+        {/* Back Button */}
+        <div className="flex items-center gap-4">
+          <BackButton href="/student/dashboard" label="Dashboard" />
+        </div>
+
         {/* Header */}
         <div>
           <h1 className="text-4xl font-bold text-white">📝 Available Tests</h1>
