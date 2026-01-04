@@ -3,27 +3,5 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "env": {
-    "MONGODB_URI": {
-      "description": "MongoDB connection string"
-    },
-    "JWT_SECRET": {
-      "description": "Secret key for JWT token signing"
-    },
-    "GEMINI_API_KEY": {
-      "description": "Google Gemini API key for AI features"
-    },
-    "NEXTAUTH_SECRET": {
-      "description": "Secret for NextAuth.js"
-    },
-    "NEXTAUTH_URL": {
-      "description": "Your app URL (auto-set by Vercel)"
-    }
-  },
-  "functions": {
-    "api/**": {
-      "maxDuration": 60
-    }
-  }
+  "framework": "nextjs"
 }
