@@ -40,19 +40,19 @@ export async function GET(request: NextRequest) {
       User.find({ 
         $or: [
           { _id: { $in: studentIds } },
-          { _id: { $in: studentIds.map(id => id?.toString()).filter(Boolean) } }
+          { _id: { $in: studentIds.map((id: any) => id?.toString()).filter(Boolean) } }
         ]
-      }).select('firstName lastName email').lean(),
+      }).select('firstName lastName email').lean() as any[],
       Test.find({ 
         $or: [
           { _id: { $in: testIds } },
-          { _id: { $in: testIds.map(id => id?.toString()).filter(Boolean) } }
+          { _id: { $in: testIds.map((id: any) => id?.toString()).filter(Boolean) } }
         ]
-      }).select('title duration').lean()
+      }).select('title duration').lean() as any[]
     ]);
 
-    const studentMap = new Map(students.map(s => [s._id.toString(), s]));
-    const testMap = new Map(tests.map(t => [t._id.toString(), t]));
+    const studentMap = new Map(students.map((s: any) => [s._id.toString(), s]));
+    const testMap = new Map(tests.map((t: any) => [t._id.toString(), t]));
 
     // Group by student and calculate average
     const studentStats = new Map<string, any>();
