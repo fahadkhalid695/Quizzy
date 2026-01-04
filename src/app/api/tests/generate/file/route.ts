@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const numQuestions = parseInt(formData.get('numQuestions') as string) || 5;
-    const difficulty = formData.get('difficulty') as string || 'medium';
+    const difficulty = (formData.get('difficulty') as string || 'medium') as 'easy' | 'medium' | 'hard';
 
     if (!file) {
       return NextResponse.json({ error: 'File is required' }, { status: 400 });
