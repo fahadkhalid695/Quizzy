@@ -1,137 +1,195 @@
-# Quiz System App
+# 🎓 Quiz App - Dynamic Quiz Management System
 
-A comprehensive, AI-powered Quiz Management System for teachers and students.
+A complete, production-ready quiz platform with AI-powered features, real-time leaderboards, and cheating detection.
 
-## Features
+## ✨ Features
 
-✨ **Core Features**
-- 👨‍🏫 Teacher Dashboard with complete class management
-- 👨‍🎓 Student Portal with test interface
-- 🔄 Dynamic tests based on teacher preferences
-- 🤖 AI-powered test generation from PDFs, images, documents, and web research (Gemini API)
-- ⚡ Auto-submission on tab switching
-- 🎯 Intelligent cheating detection system
-- 📊 Auto-grading with detailed reports
-- 🏆 Leaderboard and prizes announcer
-- 📝 Result cards and performance analytics
-- 💾 Complete test history and progress tracking
-- 🔐 Secure authentication system
-- 📱 Responsive and modern UI
+- **Authentication**: Secure registration and login for teachers and students
+- **Class Management**: Create classes, manage students, generate unique class codes
+- **Test Creation**: Build tests with multiple question types (MCQ, True/False, Short Answer, Essay)
+- **Test Taking**: Full-screen interface with countdown timer and tab-switching detection
+- **Auto-Grading**: Instant grading for objective questions, AI-powered grading for essays
+- **Results & Feedback**: Detailed score breakdown, question-by-question review, explanations
+- **Leaderboards**: Real-time class rankings with top 3 medals
+- **AI Test Generation**: Generate questions from text, files (PDF, DOCX), or URLs
+- **Class Reports**: Comprehensive analytics and student performance reports
+- **Prize System**: Configure and announce rewards for top performers
+- **Cheating Detection**: Monitors tab switching, prevents unfair practices
 
-## Tech Stack
+## 🚀 Quick Start
 
-- **Framework**: Next.js 14 (React 18)
-- **Language**: TypeScript
-- **Database**: MongoDB
-- **Styling**: TailwindCSS
-- **Authentication**: NextAuth.js
-- **AI Integration**: Google Gemini API
-- **File Processing**: PDF-Parse, Multer
-- **State Management**: Zustand
+### Local Development
 
-## Project Structure
+```bash
+# Install dependencies
+npm install
+
+# Create .env.local file with:
+# MONGODB_URI=your_mongodb_uri
+# GEMINI_API_KEY=your_google_api_key
+# JWT_SECRET=your_secret_key
+# NEXTAUTH_SECRET=your_secret_key
+
+# Run development server
+npm run dev
+
+# Open http://localhost:3000
+```
+
+### Deploy to Vercel
+
+See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for complete deployment guide.
+
+## 📁 Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   ├── auth/              # Authentication pages
-│   ├── teacher/           # Teacher dashboard & features
-│   ├── student/           # Student portal & tests
-│   ├── admin/             # Admin panel
-│   └── layout.tsx         # Root layout
-├── components/            # Reusable components
-│   ├── ui/               # UI components (buttons, cards, etc.)
-│   ├── teacher/          # Teacher-specific components
-│   ├── student/          # Student-specific components
-│   └── common/           # Shared components
-├── lib/                   # Utilities and helpers
-│   ├── db.ts            # Database connection
-│   ├── auth.ts          # Authentication logic
-│   ├── gemini.ts        # Gemini API integration
-│   ├── fileProcessor.ts # File processing utilities
-│   └── validators.ts    # Input validation
-├── models/               # MongoDB schemas
-│   ├── User.ts
-│   ├── Test.ts
-│   ├── Result.ts
-│   └── Class.ts
-├── types/                # TypeScript type definitions
-└── styles/               # Global styles
+├── app/
+│   ├── api/                  # API routes
+│   │   ├── auth/            # Authentication endpoints
+│   │   ├── classes/         # Class management
+│   │   ├── tests/           # Test CRUD and submission
+│   │   ├── results/         # Test results
+│   │   ├── leaderboard/     # Rankings
+│   │   └── reports/         # Analytics
+│   ├── teacher/             # Teacher dashboard and pages
+│   ├── student/             # Student pages
+│   └── page.tsx             # Landing page
+├── components/
+│   ├── ui/                  # Reusable UI components
+│   ├── common/              # Common components (auth, etc)
+│   ├── teacher/             # Teacher-specific components
+│   └── student/             # Student-specific components
+├── lib/
+│   ├── db.ts                # Database connection
+│   ├── api-client.ts        # API utilities
+│   ├── validators.ts        # Input validation
+│   └── middleware.ts        # Auth middleware
+├── models/                  # MongoDB schemas
+├── stores/                  # Zustand state management
+└── types/                   # TypeScript types
 ```
 
-## Environment Variables
+## 🔧 Technology Stack
 
-Create a `.env.local` file:
+- **Next.js 14** - Full-stack React framework
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **MongoDB + Mongoose** - Database
+- **TailwindCSS** - Styling
+- **JWT + bcryptjs** - Authentication
+- **Google Gemini API** - AI features
+- **Zustand** - State management
+
+## 📋 API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+
+### Classes
+- `POST /api/classes/create` - Create class
+- `GET /api/classes/list` - List user's classes
+- `POST /api/classes/students` - Add student
+- `DELETE /api/classes/students` - Remove student
+
+### Tests
+- `POST /api/tests/create` - Create test
+- `GET /api/tests/list` - List tests in class
+- `GET /api/tests/[testId]` - Get test details
+- `POST /api/tests/submit` - Submit answers
+- `GET /api/tests/available` - Get available tests
+
+### Advanced
+- `GET /api/leaderboard` - Get class ranking
+- `GET /api/reports/class/[classId]` - Get class report
+- `POST /api/tests/generate/text` - Generate from text
+- `POST /api/tests/generate/file` - Generate from file
+- `POST /api/tests/generate/web` - Generate from URL
+
+## 👥 User Roles
+
+### Teacher
+- Create and manage classes
+- Build and publish tests
+- View leaderboards and reports
+- Configure prizes
+- Monitor student performance
+
+### Student
+- Join classes with code
+- Take available tests
+- View results and feedback
+- See class leaderboard
+- Review correct answers
+
+## 🔐 Security Features
+
+- Password hashing with bcryptjs
+- JWT token-based authentication
+- Role-based access control
+- Input validation on all endpoints
+- Cheating detection via tab visibility API
+- Secure database connections
+
+## 📊 Database Models
+
+- **User** - Stores teacher/student accounts
+- **Class** - Class information and student lists
+- **Test** - Test questions and settings
+- **TestResult** - Student answers and scores
+
+## 🎯 Environment Variables
 
 ```env
-MONGODB_URI=your_mongodb_connection_string
-NEXTAUTH_SECRET=your_secret_key
-NEXTAUTH_URL=http://localhost:3000
-GEMINI_API_KEY=your_gemini_api_key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/quiz-app
+GEMINI_API_KEY=your_google_api_key
+JWT_SECRET=your_secret_key_32_chars_min
+NEXTAUTH_SECRET=your_secret_key_32_chars_min
+NODE_ENV=development
 ```
 
-## Getting Started
+## 📖 Documentation
 
-1. Install dependencies:
-```bash
-npm install
-```
+- **VERCEL_DEPLOYMENT.md** - Complete Vercel deployment guide
 
-2. Set up environment variables (see above)
+## ✅ Testing Checklist
 
-3. Run the development server:
-```bash
-npm run dev
-```
+- [ ] User registration works
+- [ ] Login/logout works
+- [ ] Create class with code
+- [ ] Add students to class
+- [ ] Create test with questions
+- [ ] Publish test
+- [ ] Take test as student
+- [ ] Auto-grading works
+- [ ] View results
+- [ ] Check leaderboard
+- [ ] Generate test from file
+- [ ] Generate test from URL
 
-4. Open [http://localhost:3000](http://localhost:3000)
+## 🚀 Deployment
 
-## Key Components & Features
+### Vercel (Recommended)
+1. Push code to GitHub
+2. Import repository in Vercel
+3. Add environment variables
+4. Deploy
 
-### Authentication System
-- Secure registration for teachers and students
-- Email verification
-- Password reset functionality
-- NextAuth.js integration
+See [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for detailed steps.
 
-### Teacher Features
-- Create and manage classes
-- Design tests with various question types
-- Generate tests from multiple sources
-- Adjust difficulty levels
-- Monitor student progress
-- View detailed analytics and reports
-- Generate result cards
-- Announce prizes and rankings
+## 📞 Support
 
-### Student Features
-- Join classes using teacher-provided codes
-- Take tests with time management
-- Auto-submission on tab switch
-- View results and feedback
-- Track performance history
-- Access leaderboards
+All code is well-documented with:
+- Clear variable and function names
+- TypeScript type annotations
+- Inline comments for complex logic
+- Error handling on all endpoints
 
-### AI Integration
-- Generate questions from PDFs, images, documents
-- Web research for content generation
-- Intelligent auto-grading
-- Cheating detection analysis
-- Question validation
+## 📄 License
 
-## Building for Production
-
-```bash
-npm run build
-npm run start
-```
-
-## License
-
-MIT License
+Private project
 
 ---
 
-For more information, visit the project documentation or contact the development team.
+**Ready to deploy!** Check [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md) for Vercel deployment steps.
