@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { IUser, UserRole } from '@/types'
 
 interface AuthState {
@@ -7,11 +7,12 @@ interface AuthState {
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
+  _hasHydrated: boolean
   login: (user: IUser, token: string) => void
   logout: () => void
   setLoading: (loading: boolean) => void
   setUser: (user: IUser) => void
-  hydrate: () => void
+  setHasHydrated: (state: boolean) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,12 +21,14 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,
+      _hasHydrated: false,
       login: (user, token) =>
         set({
           user,
           token,
           isAuthenticated: true,
+          isLoading: false,
         }),
       logout: () =>
         set({
@@ -35,17 +38,15 @@ export const useAuthStore = create<AuthState>()(
         }),
       setLoading: (loading) => set({ isLoading: loading }),
       setUser: (user) => set({ user }),
-      hydrate: () => {
-        // This function is called on app startup to restore state from localStorage
-        const token = localStorage.getItem('token')
-        if (token) {
-          set({ token, isAuthenticated: true })
-        }
-      },
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
-      name: 'auth-storage', // localStorage key
-      storage: typeof window !== 'undefined' ? require('zustand/middleware').default.localStorage : undefined,
+      name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true)
+        state?.setLoading(false)
+      },
     }
   )
 )

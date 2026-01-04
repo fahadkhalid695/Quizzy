@@ -25,15 +25,30 @@ export default function TeacherDashboard() {
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const notify = useNotify();
 
+  // Handle hydration
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isMounted && hasHydrated) {
+      fetchData();
+    }
+  }, [isMounted, hasHydrated]);
+
+  // Redirect if not authenticated after hydration
+  useEffect(() => {
+    if (isMounted && hasHydrated && !user) {
+      router.push('/auth/login');
+    }
+  }, [isMounted, hasHydrated, user, router]);
 
   const fetchData = async () => {
     try {
@@ -69,17 +84,14 @@ export default function TeacherDashboard() {
     router.push('/');
   };
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    }
-  }, [user, router]);
-
-  if (!user) {
+  // Show loading while hydrating
+  if (!isMounted || !hasHydrated || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/70 animate-pulse">Loading dashboard...</p>
+        </div>
       </div>
     );
   }

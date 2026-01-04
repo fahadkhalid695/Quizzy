@@ -8,21 +8,29 @@ import Link from 'next/link'
 
 export default function StudentDashboard() {
   const router = useRouter()
-  const { user, logout } = useAuthStore()
+  const { user, logout, _hasHydrated: hasHydrated } = useAuthStore()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
-    if (!user) {
+  }, [])
+
+  // Redirect if not authenticated after hydration
+  useEffect(() => {
+    if (isMounted && hasHydrated && !user) {
       router.push('/auth/login')
     }
-  }, [user, router])
+  }, [isMounted, hasHydrated, user, router])
 
-  if (!isMounted || !user) {
+  // Show loading while hydrating
+  if (!isMounted || !hasHydrated || !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/70 animate-pulse">Loading dashboard...</p>
+        </div>
       </div>
     )
   }
