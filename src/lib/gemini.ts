@@ -3,8 +3,8 @@ import { IQuestion, QuestionType } from '@/types'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
-// Use gemini-1.5-flash for better performance and reliability
-const MODEL_NAME = 'gemini-1.5-flash'
+// Use gemini-1.5-pro for text generation
+const MODEL_NAME = 'gemini-1.5-pro'
 
 export async function generateQuestionsFromText(
   text: string,
