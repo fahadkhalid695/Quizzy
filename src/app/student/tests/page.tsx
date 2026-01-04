@@ -6,6 +6,7 @@ import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
 import BackButton from '@/components/common/BackButton';
+import Link from 'next/link';
 
 interface TestItem {
   id: string;
@@ -21,26 +22,58 @@ interface TestItem {
   };
 }
 
+interface ClassItem {
+  id: string;
+  name: string;
+}
+
 export default function TestsPage() {
   const [tests, setTests] = useState<TestItem[]>([]);
+  const [classes, setClasses] = useState<ClassItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'available' | 'completed'>('available');
+  const [joinCode, setJoinCode] = useState('');
+  const [joining, setJoining] = useState(false);
   const router = useRouter();
   const notify = useNotify();
 
   useEffect(() => {
-    fetchTests();
+    fetchData();
   }, []);
 
-  const fetchTests = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await api.get<{ tests: TestItem[] }>('/api/tests/available');
-      setTests(response.tests || []);
+      const [testsRes, classesRes] = await Promise.all([
+        api.get<{ tests: TestItem[] }>('/api/tests/available'),
+        api.get<{ classes: ClassItem[] }>('/api/classes/enrolled'),
+      ]);
+      setTests(testsRes.tests || []);
+      setClasses(classesRes.classes || []);
     } catch (error) {
-      notify.error('Failed to load tests');
+      console.error('Failed to load data:', error);
+      notify.error('Failed to load data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleJoinClass = async () => {
+    if (!joinCode.trim()) {
+      notify.error('Please enter a class code');
+      return;
+    }
+
+    setJoining(true);
+    try {
+      await api.post('/api/classes/join', { code: joinCode.trim() });
+      notify.success('Successfully joined the class!');
+      setJoinCode('');
+      fetchData(); // Refresh data
+    } catch (error) {
+      notify.error(error instanceof Error ? error.message : 'Failed to join class');
+    } finally {
+      setJoining(false);
     }
   };
 
@@ -90,9 +123,47 @@ export default function TestsPage() {
         {/* Tests Grid */}
         {tests.length === 0 ? (
           <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12">
-            <div className="text-center">
+            <div className="text-center space-y-6">
               <div className="text-4xl mb-4">📚</div>
-              <p className="text-gray-400 text-lg">No tests available yet</p>
+              {classes.length === 0 ? (
+                <>
+                  <p className="text-gray-400 text-lg">You haven't joined any classes yet</p>
+                  <p className="text-gray-500 text-sm">Join a class using a code from your teacher to see available tests</p>
+                  
+                  {/* Join Class Form */}
+                  <div className="max-w-md mx-auto mt-6">
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={joinCode}
+                        onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                        placeholder="Enter class code (e.g., ABC123)"
+                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+                      />
+                      <Button
+                        variant="primary"
+                        onClick={handleJoinClass}
+                        isLoading={joining}
+                      >
+                        Join
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-gray-400 text-lg">No tests available yet</p>
+                  <p className="text-gray-500 text-sm">Your teacher hasn't published any tests for your classes yet</p>
+                  <div className="text-sm text-gray-500 mt-4">
+                    <p>You're enrolled in {classes.length} class(es):</p>
+                    <ul className="mt-2 space-y-1">
+                      {classes.map(c => (
+                        <li key={c.id} className="text-purple-400">{c.name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         ) : (

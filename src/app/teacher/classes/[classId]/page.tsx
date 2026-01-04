@@ -164,6 +164,27 @@ export default function ClassDetailPage() {
     }
   };
 
+  const handlePublishTest = async (testId: string, publish: boolean) => {
+    try {
+      await api.put(`/api/tests/${testId}`, { isPublished: publish });
+      notify.success(publish ? 'Test published! Students can now see it.' : 'Test unpublished');
+      fetchTests();
+    } catch (error) {
+      notify.error('Failed to update test');
+    }
+  };
+
+  const handleDeleteTest = async (testId: string) => {
+    if (!confirm('Are you sure you want to delete this test? This cannot be undone.')) return;
+    try {
+      await api.delete(`/api/tests/${testId}`);
+      notify.success('Test deleted');
+      fetchTests();
+    } catch (error) {
+      notify.error('Failed to delete test');
+    }
+  };
+
   if (!classId) {
     return <div className="min-h-screen bg-slate-900 text-center py-12 text-gray-400">Class not found</div>;
   }
@@ -323,9 +344,22 @@ export default function ClassDetailPage() {
                           </span>
                         </div>
                       </div>
-                      <Button variant="secondary" size="sm">
-                        Manage
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant={test.isPublished ? 'secondary' : 'success'}
+                          size="sm"
+                          onClick={() => handlePublishTest(test.id, !test.isPublished)}
+                        >
+                          {test.isPublished ? 'Unpublish' : 'Publish'}
+                        </Button>
+                        <Button 
+                          variant="danger"
+                          size="sm"
+                          onClick={() => handleDeleteTest(test.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}

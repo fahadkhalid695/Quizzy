@@ -20,9 +20,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Only students can access this' }, { status: 403 });
     }
 
-    // Get classes student is enrolled in
-    const classes = await Class.find({ students: payload.userId }).select('_id');
+    console.log('Fetching tests for student:', payload.userId);
+
+    // Get classes student is enrolled in - check both string and ObjectId formats
+    const classes = await Class.find({
+      $or: [
+        { students: payload.userId },
+        { students: payload.userId.toString() }
+      ]
+    }).select('_id name');
+    
+    console.log('Student enrolled in classes:', classes.map(c => ({ id: c._id, name: c.name })));
+    
     const classIds = classes.map((c) => c._id);
+
+    if (classIds.length === 0) {
+      console.log('Student not enrolled in any classes');
+      return NextResponse.json({
+        success: true,
+        tests: [],
+        message: 'You are not enrolled in any classes yet. Join a class using a class code to see available tests.'
+      });
+    }
 
     // Get published tests from enrolled classes
     const tests = await Test.find({
@@ -31,6 +50,8 @@ export async function GET(request: NextRequest) {
     })
       .populate('classId', 'name')
       .sort({ createdAt: -1 });
+
+    console.log('Found tests:', tests.length);
 
     return NextResponse.json({
       success: true,
