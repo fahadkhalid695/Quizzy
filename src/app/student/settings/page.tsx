@@ -212,7 +212,7 @@ export default function StudentSettingsPage() {
         <div className="bg-red-500/10 backdrop-blur-md border border-red-500/30 rounded-2xl p-6">
           <h2 className="text-xl font-bold text-red-400 mb-4">Danger Zone</h2>
           <p className="text-gray-400 mb-4">
-            Logging out will clear your session. You'll need to log in again to access your account.
+            Logging out will clear your session. You&apos;ll need to log in again to access your account.
           </p>
           <Button variant="danger" onClick={handleLogout}>
             🚪 Logout
