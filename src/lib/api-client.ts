@@ -6,13 +6,25 @@ interface ApiOptions {
   body?: any
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-
 export async function apiCall<T>(
   endpoint: string,
   options: ApiOptions = {}
 ): Promise<T> {
-  const token = useAuthStore.getState().token
+  // Get token from Zustand store
+  let token = useAuthStore.getState().token
+  
+  // Fallback: try to get token from localStorage directly if store is empty
+  if (!token && typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('auth-storage')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        token = parsed.state?.token || null
+      }
+    } catch (e) {
+      console.error('Error reading token from localStorage:', e)
+    }
+  }
 
   const defaultHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -22,7 +34,10 @@ export async function apiCall<T>(
     defaultHeaders['Authorization'] = `Bearer ${token}`
   }
 
-  const response = await fetch(`${API_BASE_URL}/api${endpoint}`, {
+  // Ensure endpoint starts with /
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
+
+  const response = await fetch(normalizedEndpoint, {
     method: options.method || 'GET',
     headers: {
       ...defaultHeaders,
