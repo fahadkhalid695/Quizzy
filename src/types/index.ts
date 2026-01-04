@@ -63,6 +63,20 @@ export interface ITest {
   endTime?: Date
   totalMarks: number
   showAnswers: boolean
+  // AI Generation metadata
+  aiGenerated?: boolean
+  sourceType?: 'manual' | 'topic' | 'file' | 'text' | 'web'
+  sourceTopic?: string
+  sourceContent?: string
+  // Dynamic Test Settings
+  isDynamic?: boolean
+  dynamicSettings?: {
+    questionPool?: IQuestion[]
+    questionsPerStudent?: number
+    shuffleQuestions?: boolean
+    shuffleOptions?: boolean
+    regenerateOnRetake?: boolean
+  }
   createdAt: Date
   updatedAt: Date
 }
