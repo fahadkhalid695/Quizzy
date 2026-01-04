@@ -21,33 +21,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    let classes;
+    let classes: any[];
     if (payload.role === 'teacher') {
       // Get classes taught by this teacher
       classes = await Class.find({ teacherId: payload.userId })
         .sort({ createdAt: -1 })
-        .lean();
+        .lean() as any[];
       
       // Get test counts for each class
-      const classIds = classes.map(c => c._id.toString());
+      const classIds = classes.map((c: any) => c._id.toString());
       const testCounts = await Test.aggregate([
         { $match: { classId: { $in: classIds } } },
         { $group: { _id: '$classId', count: { $sum: 1 } } }
       ]);
-      const testCountMap = new Map(testCounts.map(t => [t._id, t.count]));
+      const testCountMap = new Map(testCounts.map((t: any) => [t._id, t.count]));
       
       // Get student details for each class
-      const allStudentIds = [...new Set(classes.flatMap(c => c.students || []))];
+      const allStudentIds = [...new Set(classes.flatMap((c: any) => c.students || []))];
       const students = await User.find({ 
         $or: [
           { _id: { $in: allStudentIds } },
-          { _id: { $in: allStudentIds.map(id => id?.toString()).filter(Boolean) } }
+          { _id: { $in: allStudentIds.map((id: any) => id?.toString()).filter(Boolean) } }
         ]
-      }).select('firstName lastName email').lean();
-      const studentMap = new Map(students.map(s => [s._id.toString(), s]));
+      }).select('firstName lastName email').lean() as any[];
+      const studentMap = new Map(students.map((s: any) => [s._id.toString(), s]));
       
       // Format response
-      classes = classes.map(c => ({
+      classes = classes.map((c: any) => ({
         _id: c._id,
         name: c.name,
         description: c.description,
@@ -74,28 +74,28 @@ export async function GET(request: NextRequest) {
         ]
       })
         .sort({ createdAt: -1 })
-        .lean();
+        .lean() as any[];
       
       // Get teacher details
-      const teacherIds = [...new Set(classes.map(c => c.teacherId))];
+      const teacherIds = [...new Set(classes.map((c: any) => c.teacherId))];
       const teachers = await User.find({ 
         $or: [
           { _id: { $in: teacherIds } },
-          { _id: { $in: teacherIds.map(id => id?.toString()).filter(Boolean) } }
+          { _id: { $in: teacherIds.map((id: any) => id?.toString()).filter(Boolean) } }
         ]
-      }).select('firstName lastName email').lean();
-      const teacherMap = new Map(teachers.map(t => [t._id.toString(), t]));
+      }).select('firstName lastName email').lean() as any[];
+      const teacherMap = new Map(teachers.map((t: any) => [t._id.toString(), t]));
       
       // Get test counts
-      const classIds = classes.map(c => c._id.toString());
+      const classIds = classes.map((c: any) => c._id.toString());
       const testCounts = await Test.aggregate([
         { $match: { classId: { $in: classIds }, isPublished: true } },
         { $group: { _id: '$classId', count: { $sum: 1 } } }
-      ]);
-      const testCountMap = new Map(testCounts.map(t => [t._id, t.count]));
+      ]) as any[];
+      const testCountMap = new Map(testCounts.map((t: any) => [t._id, t.count]));
       
       // Format response
-      classes = classes.map(c => {
+      classes = classes.map((c: any) => {
         const teacher = teacherMap.get(c.teacherId?.toString());
         return {
           _id: c._id,
