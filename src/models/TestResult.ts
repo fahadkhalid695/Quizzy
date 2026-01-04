@@ -69,3 +69,5 @@ const resultSchema = new Schema<ITestResultDocument>(
 
 export const TestResult =
   mongoose.models.TestResult || mongoose.model<ITestResultDocument>('TestResult', resultSchema)
+
+export default TestResult

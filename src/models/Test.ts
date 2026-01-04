@@ -77,3 +77,5 @@ const testSchema = new Schema<ITestDocument>(
 )
 
 export const Test = mongoose.models.Test || mongoose.model<ITestDocument>('Test', testSchema)
+
+export default Test

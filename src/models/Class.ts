@@ -31,3 +31,5 @@ const classSchema = new Schema<IClassDocument>(
 )
 
 export const Class = mongoose.models.Class || mongoose.model<IClassDocument>('Class', classSchema)
+
+export default Class
