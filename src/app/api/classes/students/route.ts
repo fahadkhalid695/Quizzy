@@ -111,7 +111,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Remove student
-    classDoc.students = classDoc.students.filter((id) => id.toString() !== studentId);
+    classDoc.students = classDoc.students.filter((id: any) => id.toString() !== studentId);
     await classDoc.save();
 
     await classDoc.populate('students', 'firstName lastName email');
