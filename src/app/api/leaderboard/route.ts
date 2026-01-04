@@ -36,20 +36,19 @@ export async function GET(request: NextRequest) {
     const testIds = [...new Set(results.map((r: any) => r.testId))];
 
     // Fetch students and tests
-    const [students, tests] = await Promise.all([
-      User.find({ 
-        $or: [
-          { _id: { $in: studentIds } },
-          { _id: { $in: studentIds.map((id: any) => id?.toString()).filter(Boolean) } }
-        ]
-      }).select('firstName lastName email').lean() as any[],
-      Test.find({ 
-        $or: [
-          { _id: { $in: testIds } },
-          { _id: { $in: testIds.map((id: any) => id?.toString()).filter(Boolean) } }
-        ]
-      }).select('title duration').lean() as any[]
-    ]);
+    const students: any[] = await User.find({ 
+      $or: [
+        { _id: { $in: studentIds } },
+        { _id: { $in: studentIds.map((id: any) => id?.toString()).filter(Boolean) } }
+      ]
+    }).select('firstName lastName email').lean();
+    
+    const tests: any[] = await Test.find({ 
+      $or: [
+        { _id: { $in: testIds } },
+        { _id: { $in: testIds.map((id: any) => id?.toString()).filter(Boolean) } }
+      ]
+    }).select('title duration').lean();
 
     const studentMap = new Map(students.map((s: any) => [s._id.toString(), s]));
     const testMap = new Map(tests.map((t: any) => [t._id.toString(), t]));
