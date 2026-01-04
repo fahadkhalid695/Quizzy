@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
 
     // Create test result
     const percentage = totalMarks > 0 ? (obtainedMarks / totalMarks) * 100 : 0;
+    const now = new Date();
 
     const testResult = new TestResult({
       testId,
@@ -133,8 +134,10 @@ export async function POST(request: NextRequest) {
       percentage: Math.round(percentage),
       status: 'graded',
       cheatingScore,
-      cheatingDetails,
+      cheatingDetails: cheatingDetails.join('; '),
       attemptNumber: 1,
+      startedAt: new Date(now.getTime() - (answers.reduce((sum: number, a: any) => sum + (a.timeSpent || 0), 0) * 1000)),
+      submittedAt: now,
     });
 
     await testResult.save();

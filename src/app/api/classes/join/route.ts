@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
 import { verifyToken } from '@/lib/auth-middleware'
 import Class from '@/models/Class'
+import User from '@/models/User'
 
 // POST - Join a class using class code
 export async function POST(request: NextRequest) {
@@ -28,20 +29,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Class code is required' }, { status: 400 })
     }
 
-    // Find class by code (case insensitive)
-    const classDoc = await Class.findOne({ code: code.toUpperCase() })
+    // Clean and normalize the code
+    const normalizedCode = code.trim().toUpperCase()
+
+    // Find class by code (case insensitive search)
+    const classDoc = await Class.findOne({ 
+      code: { $regex: new RegExp(`^${normalizedCode}$`, 'i') }
+    })
+    
     if (!classDoc) {
       return NextResponse.json({ error: 'Invalid class code. Please check and try again.' }, { status: 404 })
     }
 
     // Check if student is already in the class
-    if (classDoc.students.includes(payload.userId)) {
-      return NextResponse.json({ error: 'You are already in this class' }, { status: 400 })
+    const studentIdStr = payload.userId.toString()
+    const isAlreadyEnrolled = classDoc.students.some(
+      (id: any) => id.toString() === studentIdStr
+    )
+    
+    if (isAlreadyEnrolled) {
+      return NextResponse.json({ error: 'You are already enrolled in this class' }, { status: 400 })
     }
 
     // Add student to class
     classDoc.students.push(payload.userId)
     await classDoc.save()
+
+    // Also update the student's enrolled classes if the field exists
+    await User.findByIdAndUpdate(payload.userId, {
+      $addToSet: { enrolledClasses: classDoc._id }
+    })
 
     return NextResponse.json({
       success: true,

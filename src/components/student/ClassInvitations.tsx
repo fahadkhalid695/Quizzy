@@ -15,7 +15,11 @@ interface Invitation {
   createdAt: string
 }
 
-export default function ClassInvitations() {
+interface ClassInvitationsProps {
+  onClassJoined?: () => void
+}
+
+export default function ClassInvitations({ onClassJoined }: ClassInvitationsProps) {
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -46,6 +50,9 @@ export default function ClassInvitations() {
       await api.post('/api/invitations/student', { invitationId, action })
       notify.success(action === 'accept' ? 'You have joined the class!' : 'Invitation declined')
       fetchInvitations()
+      if (action === 'accept' && onClassJoined) {
+        onClassJoined()
+      }
     } catch (error) {
       notify.error(error instanceof Error ? error.message : 'Failed to respond to invitation')
     } finally {
@@ -59,12 +66,15 @@ export default function ClassInvitations() {
 
     try {
       setJoinLoading(true)
-      await api.post('/api/classes/join', { code: classCode.trim().toUpperCase() })
-      notify.success('Successfully joined the class!')
+      const response = await api.post<{ success: boolean; message: string; class: any }>('/api/classes/join', { code: classCode.trim().toUpperCase() })
+      notify.success(response.message || 'Successfully joined the class!')
       setClassCode('')
       setShowJoinModal(false)
+      if (onClassJoined) {
+        onClassJoined()
+      }
     } catch (error) {
-      notify.error(error instanceof Error ? error.message : 'Failed to join class')
+      notify.error(error instanceof Error ? error.message : 'Failed to join class. Please check the code and try again.')
     } finally {
       setJoinLoading(false)
     }

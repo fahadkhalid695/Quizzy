@@ -111,6 +111,7 @@ export default function TeacherDashboard() {
     { icon: '📚', label: 'Classes', href: '/teacher/classes' },
     { icon: '✏️', label: 'Tests', href: '/teacher/tests' },
     { icon: '📊', label: 'Analytics', href: '/teacher/analytics' },
+    { icon: '📈', label: 'Reports', href: '/teacher/reports' },
     { icon: '⚙️', label: 'Settings', href: '/teacher/settings' },
   ];
 
