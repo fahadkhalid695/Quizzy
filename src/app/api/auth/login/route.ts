@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { connectDB } from '@/lib/db'
-import { User } from '@/models/User'
+import User from '@/models/User'
 import { comparePasswords } from '@/lib/validators'
 import jwt from 'jsonwebtoken'
 

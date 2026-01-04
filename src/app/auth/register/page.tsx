@@ -3,9 +3,10 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
+import Button from '@/components/ui/Button'
 import { Input } from '@/components/ui/FormElements'
-import { Card } from '@/components/ui/Card'
+import Card from '@/components/ui/Card'
+const { Header: CardHeader, Body: CardBody, Footer: CardFooter } = Card
 
 export default function RegisterPage() {
   const router = useRouter()

@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardBody } from '@/components/ui/Card'
+import Button from '@/components/ui/Button'
+import Card from '@/components/ui/Card'
+const { Header: CardHeader, Body: CardBody } = Card
 
 export default function StudentDashboard() {
   const router = useRouter()
