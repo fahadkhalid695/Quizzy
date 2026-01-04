@@ -37,12 +37,12 @@ export default function Home() {
           <div className="flex gap-4 justify-center">
             <Link href="/auth/register?role=teacher">
               <Button variant="primary" size="lg">
-                👨‍🏫 I'm a Teacher
+                👨‍🏫 I&apos;m a Teacher
               </Button>
             </Link>
             <Link href="/auth/register?role=student">
               <Button size="lg" className="bg-white text-primary hover:bg-gray-100">
-                👨‍🎓 I'm a Student
+                👨‍🎓 I&apos;m a Student
               </Button>
             </Link>
           </div>

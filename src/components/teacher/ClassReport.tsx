@@ -22,7 +22,7 @@ export default function ClassReport({ classId }: ReportCardProps) {
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/reports/class/${classId}`);
+      const response = await api.get<{ report: any }>(`/api/reports/class/${classId}`);
       setReport(response.report);
     } catch (error) {
       notify.error('Failed to fetch report');

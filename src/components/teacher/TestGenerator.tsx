@@ -79,14 +79,14 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
         const data = await response.json();
         setGeneratedQuestions(data.questions);
       } else if (source === 'web') {
-        const response = await api.post('/api/tests/generate/web', {
+        const response = await api.post<{ questions: any[] }>('/api/tests/generate/web', {
           url: webUrl,
           numQuestions,
           difficulty,
         });
         setGeneratedQuestions(response.questions);
       } else {
-        const response = await api.post('/api/tests/generate/text', {
+        const response = await api.post<{ questions: any[] }>('/api/tests/generate/text', {
           content: textContent,
           numQuestions,
           difficulty,
@@ -221,7 +221,7 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
         <Button
           variant="primary"
           onClick={handleGenerate}
-          loading={loading}
+          isLoading={loading}
           className="w-full"
           size="lg"
         >

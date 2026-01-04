@@ -283,7 +283,7 @@ export default function TestForm({ classId, onSuccess }: TestFormProps) {
 
         {/* Submit */}
         <div className="flex gap-2">
-          <Button type="submit" variant="primary" loading={loading} className="flex-1">
+          <Button type="submit" variant="primary" isLoading={loading} className="flex-1">
             Create Test
           </Button>
         </div>

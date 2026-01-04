@@ -31,7 +31,7 @@ export default function Leaderboard({ classId }: LeaderboardProps) {
     const fetchLeaderboard = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/api/leaderboard?classId=${classId}`);
+        const response = await api.get<{ leaderboard: any[] }>(`/api/leaderboard?classId=${classId}`);
         setLeaderboard(response.leaderboard || []);
       } catch (error) {
         notify.error('Failed to fetch leaderboard');

@@ -19,7 +19,7 @@ interface Question {
 interface TestTakingProps {
   testId: string;
   classId: string;
-  onSubmit?: () => void;
+  onSubmit?: (resultId: string) => void;
 }
 
 export default function TestTaking({ testId, classId, onSubmit }: TestTakingProps) {
@@ -36,7 +36,7 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
   useEffect(() => {
     const fetchTest = async () => {
       try {
-        const response = await api.get(`/api/tests/${testId}`);
+        const response = await api.get<{ test: any }>(`/api/tests/${testId}`);
         setTest(response.test);
         setTimeLeft((response.test.duration || 60) * 60); // Convert to seconds
       } catch (error) {
@@ -104,14 +104,18 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
         timeSpent: 0, // Could track time per question
       }));
 
-      const response = await api.post('/api/tests/submit', {
+      const response = await api.post<{ result: { id: string } }>('/api/tests/submit', {
         testId,
         classId,
         answers: answersArray,
       });
 
       notify.success('Test submitted successfully!');
-      onSubmit?.();
+      if (response.result?.id) {
+        onSubmit?.(response.result.id);
+      } else {
+        onSubmit?.('');
+      }
     } catch (error) {
       notify.error(error instanceof Error ? error.message : 'Failed to submit test');
     } finally {
@@ -271,7 +275,7 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
           variant="primary"
           size="lg"
           onClick={handleSubmit}
-          loading={submitting}
+          isLoading={submitting}
           disabled={!allAnswered || submitting}
         >
           {allAnswered ? '✓ Submit Test' : `Answer all questions (${answers.size}/${test.questions.length})`}

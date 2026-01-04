@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose'
 import { ITestResult } from '@/types'
 
-interface ITestResultDocument extends ITestResult, Document {}
+interface ITestResultDocument extends Omit<ITestResult, '_id'>, Document {}
 
 const answerSchema = new Schema({
   questionId: String,
@@ -14,19 +14,16 @@ const answerSchema = new Schema({
 const resultSchema = new Schema<ITestResultDocument>(
   {
     testId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: 'Test',
     },
     studentId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: 'User',
     },
     classId: {
-      type: Schema.Types.ObjectId,
+      type: String,
       required: true,
-      ref: 'Class',
     },
     answers: [answerSchema],
     totalMarks: {
