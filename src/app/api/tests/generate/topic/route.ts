@@ -40,12 +40,21 @@ export async function POST(request: NextRequest) {
 
     console.log('Generating quiz for topic:', topic);
     
-    const result = await researchAndGenerateQuiz(
-      topic,
-      numQuestions || 5,
-      difficulty || 'medium',
-      questionTypes || ['multiple_choice']
-    );
+    let result;
+    try {
+      result = await researchAndGenerateQuiz(
+        topic,
+        numQuestions || 5,
+        difficulty || 'medium',
+        questionTypes || ['multiple_choice']
+      );
+    } catch (geminiError: any) {
+      console.error('Gemini API failed:', geminiError);
+      return NextResponse.json(
+        { error: geminiError?.message || 'Gemini API failed' },
+        { status: 500 }
+      );
+    }
 
     console.log('Generated questions count:', result.questions.length);
 

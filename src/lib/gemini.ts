@@ -208,7 +208,12 @@ export async function researchAndGenerateQuiz(
   questionTypes: ('multiple_choice' | 'true_false' | 'short_answer')[] = ['multiple_choice']
 ): Promise<{ questions: IQuestion[]; researchSummary: string }> {
   try {
+    console.log('researchAndGenerateQuiz called with:', { topic, numberOfQuestions, difficulty, questionTypes });
+    console.log('GEMINI_API_KEY present:', !!process.env.GEMINI_API_KEY);
+    console.log('GEMINI_API_KEY length:', process.env.GEMINI_API_KEY?.length || 0);
+    
     const model = genAI.getGenerativeModel({ model: MODEL_NAME })
+    console.log('Model initialized:', MODEL_NAME);
 
     // Step 1: Research the topic
     const researchPrompt = `
@@ -233,9 +238,12 @@ Format your response as JSON:
 Return only valid JSON.
     `
 
+    console.log('Sending research prompt to Gemini...');
     const researchResult = await model.generateContent(researchPrompt)
+    console.log('Research result received');
     const researchResponse = await researchResult.response
     const researchText = researchResponse.text()
+    console.log('Research text length:', researchText.length);
 
     let research = { summary: '', keyFacts: [], misconceptions: [], examples: [] }
     const researchMatch = researchText.match(/\{[\s\S]*\}/)
@@ -308,11 +316,12 @@ Return only valid JSON array.
       questions,
       researchSummary: research.summary || 'Research completed successfully.',
     }
-  } catch (error) {
-    console.error('Error in research and generate quiz:', error)
-    return {
-      questions: [],
-      researchSummary: 'Failed to research the topic.',
-    }
+  } catch (error: any) {
+    console.error('Error in research and generate quiz:', error);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
+    
+    // Re-throw the error with more details so the API can return it
+    throw new Error(`Gemini API Error: ${error?.message || 'Unknown error'}`);
   }
 }
