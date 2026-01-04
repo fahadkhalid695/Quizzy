@@ -22,13 +22,16 @@ interface TestGeneratorProps {
 
 export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorProps) {
   const [file, setFile] = useState<File | null>(null);
-  const [source, setSource] = useState<'file' | 'web' | 'text'>('file');
+  const [source, setSource] = useState<'file' | 'web' | 'text' | 'topic'>('file');
   const [webUrl, setWebUrl] = useState('');
   const [textContent, setTextContent] = useState('');
+  const [topicInput, setTopicInput] = useState('');
   const [numQuestions, setNumQuestions] = useState(5);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [questionTypes, setQuestionTypes] = useState<string[]>(['multiple_choice']);
   const [loading, setLoading] = useState(false);
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
+  const [researchSummary, setResearchSummary] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const notify = useNotify();
 
@@ -36,6 +39,14 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
     if (e.target.files) {
       setFile(e.target.files[0]);
     }
+  };
+
+  const toggleQuestionType = (type: string) => {
+    setQuestionTypes(prev => 
+      prev.includes(type) 
+        ? prev.filter(t => t !== type)
+        : [...prev, type]
+    );
   };
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -56,10 +67,16 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
       return;
     }
 
+    if (source === 'topic' && !topicInput.trim()) {
+      notify.error('Please enter a topic to research');
+      return;
+    }
+
     setLoading(true);
+    setResearchSummary('');
 
     try {
-      let sourceData: any = {};
+      let questions: GeneratedQuestion[] = [];
 
       if (source === 'file') {
         const formData = new FormData();
@@ -77,25 +94,35 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
 
         if (!response.ok) throw new Error('Failed to generate from file');
         const data = await response.json();
-        setGeneratedQuestions(data.questions);
+        questions = data.questions;
       } else if (source === 'web') {
         const response = await api.post<{ questions: any[] }>('/api/tests/generate/web', {
           url: webUrl,
           numQuestions,
           difficulty,
         });
-        setGeneratedQuestions(response.questions);
+        questions = response.questions;
+      } else if (source === 'topic') {
+        const response = await api.post<{ questions: any[]; researchSummary: string }>('/api/tests/generate/topic', {
+          topic: topicInput,
+          numQuestions,
+          difficulty,
+          questionTypes,
+        });
+        questions = response.questions;
+        setResearchSummary(response.researchSummary);
       } else {
         const response = await api.post<{ questions: any[] }>('/api/tests/generate/text', {
           content: textContent,
           numQuestions,
           difficulty,
         });
-        setGeneratedQuestions(response.questions);
+        questions = response.questions;
       }
 
-      notify.success(`Generated ${generatedQuestions.length} questions!`);
-      onQuestionsGenerated?.(generatedQuestions);
+      setGeneratedQuestions(questions);
+      notify.success(`Generated ${questions.length} questions!`);
+      onQuestionsGenerated?.(questions);
     } catch (error) {
       notify.error(error instanceof Error ? error.message : 'Failed to generate questions');
     } finally {
@@ -110,8 +137,8 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
         {/* Source Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">Choose Source</label>
-          <div className="grid grid-cols-3 gap-3">
-            {(['file', 'web', 'text'] as const).map((s) => (
+          <div className="grid grid-cols-4 gap-3">
+            {(['file', 'web', 'text', 'topic'] as const).map((s) => (
               <button
                 key={s}
                 onClick={() => setSource(s)}
@@ -124,6 +151,7 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
                 {s === 'file' && '📄 File'}
                 {s === 'web' && '🌐 Web'}
                 {s === 'text' && '✍️ Text'}
+                {s === 'topic' && '🔬 Research'}
               </button>
             ))}
           </div>
@@ -190,6 +218,50 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
           </div>
         )}
 
+        {source === 'topic' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                🔬 Research Topic
+              </label>
+              <input
+                type="text"
+                value={topicInput}
+                onChange={(e) => setTopicInput(e.target.value)}
+                placeholder="e.g., Photosynthesis, World War II, Quantum Computing..."
+                className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-600 focus:outline-none"
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                AI will research this topic and generate comprehensive quiz questions
+              </p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Question Types</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'multiple_choice', label: '📝 Multiple Choice' },
+                  { value: 'true_false', label: '✅ True/False' },
+                  { value: 'short_answer', label: '✍️ Short Answer' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => toggleQuestionType(value)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                      questionTypes.includes(value)
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Settings */}
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -225,8 +297,16 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
           className="w-full"
           size="lg"
         >
-          🚀 Generate Questions with AI
+          {source === 'topic' ? '🔬 Research & Generate Questions' : '🚀 Generate Questions with AI'}
         </Button>
+
+        {/* Research Summary */}
+        {researchSummary && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="font-bold text-blue-900 mb-2">📚 Research Summary</h3>
+            <p className="text-blue-800 text-sm whitespace-pre-wrap">{researchSummary}</p>
+          </div>
+        )}
 
         {/* Generated Questions Preview */}
         {generatedQuestions.length > 0 && (

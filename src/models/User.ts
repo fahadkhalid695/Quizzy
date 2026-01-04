@@ -1,7 +1,10 @@
 import mongoose, { Schema, Document } from 'mongoose'
 import { IUser, UserRole } from '@/types'
 
-interface IUserDocument extends Omit<IUser, '_id'>, Document {}
+interface IUserDocument extends Omit<IUser, '_id'>, Document {
+  resetPasswordToken?: string;
+  resetPasswordExpires?: Date;
+}
 
 const userSchema = new Schema<IUserDocument>(
   {
@@ -32,6 +35,8 @@ const userSchema = new Schema<IUserDocument>(
     },
     phone: String,
     profileImage: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
   },
   { timestamps: true }
 )

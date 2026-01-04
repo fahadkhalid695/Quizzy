@@ -197,3 +197,119 @@ Return only valid JSON array.
     return []
   }
 }
+
+export async function researchAndGenerateQuiz(
+  topic: string,
+  numberOfQuestions: number,
+  difficulty: 'easy' | 'medium' | 'hard',
+  questionTypes: ('multiple_choice' | 'true_false' | 'short_answer')[] = ['multiple_choice']
+): Promise<{ questions: IQuestion[]; researchSummary: string }> {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
+
+    // Step 1: Research the topic
+    const researchPrompt = `
+You are an expert researcher and educator. Research the following topic thoroughly and provide comprehensive information that can be used to create educational quiz questions.
+
+Topic: "${topic}"
+
+Provide:
+1. A comprehensive summary of the topic (3-5 paragraphs covering key concepts, facts, history, and important details)
+2. Key facts and figures
+3. Common misconceptions
+4. Real-world applications or examples
+
+Format your response as JSON:
+{
+  "summary": "Comprehensive research summary...",
+  "keyFacts": ["fact1", "fact2", ...],
+  "misconceptions": ["misconception1", ...],
+  "examples": ["example1", ...]
+}
+
+Return only valid JSON.
+    `
+
+    const researchResult = await model.generateContent(researchPrompt)
+    const researchResponse = await researchResult.response
+    const researchText = researchResponse.text()
+
+    let research = { summary: '', keyFacts: [], misconceptions: [], examples: [] }
+    const researchMatch = researchText.match(/\{[\s\S]*\}/)
+    if (researchMatch) {
+      try {
+        research = JSON.parse(researchMatch[0])
+      } catch (e) {
+        research.summary = researchText
+      }
+    }
+
+    // Step 2: Generate questions based on research
+    const questionTypeInstructions = questionTypes.map(type => {
+      if (type === 'multiple_choice') return 'Multiple choice questions with 4 options'
+      if (type === 'true_false') return 'True/False questions'
+      if (type === 'short_answer') return 'Short answer questions requiring brief explanations'
+      return type
+    }).join(', ')
+
+    const questionsPrompt = `
+Based on this research about "${topic}":
+
+Summary: ${research.summary}
+Key Facts: ${JSON.stringify(research.keyFacts)}
+Common Misconceptions: ${JSON.stringify(research.misconceptions)}
+Examples: ${JSON.stringify(research.examples)}
+
+Create ${numberOfQuestions} ${difficulty} difficulty educational questions.
+Include these question types: ${questionTypeInstructions}
+
+Return a JSON array:
+[
+  {
+    "type": "multiple_choice" | "true_false" | "short_answer",
+    "question": "Question text",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice, ["True", "False"] for true_false, null for short_answer),
+    "correctAnswer": "Correct answer",
+    "explanation": "Detailed explanation of why this is correct",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  }
+]
+
+Make questions varied, educational, and test real understanding of the topic.
+Include questions that test both factual knowledge and conceptual understanding.
+For misconceptions, create questions that help clarify them.
+Return only valid JSON array.
+    `
+
+    const questionsResult = await model.generateContent(questionsPrompt)
+    const questionsResponse = await questionsResult.response
+    const questionsText = questionsResponse.text()
+
+    let questions: IQuestion[] = []
+    const questionsMatch = questionsText.match(/\[[\s\S]*\]/)
+    if (questionsMatch) {
+      const parsed = JSON.parse(questionsMatch[0])
+      questions = parsed.map((q: any) => ({
+        type: q.type || QuestionType.MULTIPLE_CHOICE,
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+        difficulty: q.difficulty || difficulty,
+        marks: q.marks || 1,
+      }))
+    }
+
+    return {
+      questions,
+      researchSummary: research.summary || 'Research completed successfully.',
+    }
+  } catch (error) {
+    console.error('Error in research and generate quiz:', error)
+    return {
+      questions: [],
+      researchSummary: 'Failed to research the topic.',
+    }
+  }
+}

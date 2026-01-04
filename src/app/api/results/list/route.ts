@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-middleware';
-import Result from '@/models/Result';
+import TestResult from '@/models/TestResult';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all results for this student
-    const results = await Result.find({ studentId: payload.userId })
+    const results = await TestResult.find({ studentId: payload.userId })
       .populate('testId', 'title totalMarks duration difficulty')
       .sort({ submittedAt: -1 })
       .lean();
