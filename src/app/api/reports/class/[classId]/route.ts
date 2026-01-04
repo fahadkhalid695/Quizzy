@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ class
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = verifyToken(token);
+    const payload = await verifyToken(token);
     if (!payload || payload.role !== 'teacher') {
       return NextResponse.json({ error: 'Only teachers can access this' }, { status: 403 });
     }
