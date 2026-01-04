@@ -92,28 +92,28 @@ ${s.firstName} ${s.lastName}
 
           {/* Student Performance Table */}
           <div>
-            <h3 className="font-bold text-lg text-gray-900 mb-4">Student Performance</h3>
+            <h3 className="font-bold text-lg text-white mb-4">Student Performance</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-2 px-4 font-semibold text-gray-900">Student</th>
-                    <th className="text-center py-2 px-4 font-semibold text-gray-900">Tests</th>
-                    <th className="text-center py-2 px-4 font-semibold text-gray-900">Average</th>
-                    <th className="text-center py-2 px-4 font-semibold text-gray-900">Score</th>
+                  <tr className="border-b-2 border-white/20">
+                    <th className="text-left py-2 px-4 font-semibold text-white">Student</th>
+                    <th className="text-center py-2 px-4 font-semibold text-white">Tests</th>
+                    <th className="text-center py-2 px-4 font-semibold text-white">Average</th>
+                    <th className="text-center py-2 px-4 font-semibold text-white">Score</th>
                   </tr>
                 </thead>
                 <tbody>
                   {report?.students?.map((student: any) => (
-                    <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium text-gray-900">
+                    <tr key={student.id} className="border-b border-white/10 hover:bg-white/5">
+                      <td className="py-3 px-4 font-medium text-white">
                         {student.firstName} {student.lastName}
                       </td>
-                      <td className="py-3 px-4 text-center text-gray-700">{student.totalTests}</td>
-                      <td className="py-3 px-4 text-center font-bold text-gray-900">
+                      <td className="py-3 px-4 text-center text-gray-300">{student.totalTests}</td>
+                      <td className="py-3 px-4 text-center font-bold text-purple-400">
                         {student.averagePercentage}%
                       </td>
-                      <td className="py-3 px-4 text-center text-gray-700">
+                      <td className="py-3 px-4 text-center text-gray-300">
                         {student.obtainedMarks}/{student.totalMarks}
                       </td>
                     </tr>

@@ -63,10 +63,10 @@ export default function PrizeAnnouncer({ classId }: PrizeProps) {
         <Card.Body>
           <div className="space-y-3">
             {prizes.map((prize) => (
-              <div key={prize.rank} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div key={prize.rank} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-lg">
                 <div className="flex-1">
-                  <div className="font-bold text-gray-900">{prize.name}</div>
-                  <div className="text-sm text-gray-600">{prize.description}</div>
+                  <div className="font-bold text-white">{prize.name}</div>
+                  <div className="text-sm text-gray-400">{prize.description}</div>
                   {editingPrize === prize.rank ? (
                     <div className="mt-2 flex gap-2">
                       <Input
@@ -86,7 +86,7 @@ export default function PrizeAnnouncer({ classId }: PrizeProps) {
                       </Button>
                     </div>
                   ) : (
-                    <div className="mt-2 text-sm font-medium text-indigo-600">{prize.reward}</div>
+                    <div className="mt-2 text-sm font-medium text-purple-400">{prize.reward}</div>
                   )}
                 </div>
                 {editingPrize !== prize.rank && (
@@ -112,7 +112,7 @@ export default function PrizeAnnouncer({ classId }: PrizeProps) {
         <Card.Header title="🏆 Today's Winners" />
         <Card.Body>
           {leaderboard.length === 0 ? (
-            <p className="text-center text-gray-500">No students yet</p>
+            <p className="text-center text-gray-400">No students yet</p>
           ) : (
             <div className="space-y-3">
               {leaderboard.slice(0, 3).map((student, idx) => {
@@ -122,10 +122,10 @@ export default function PrizeAnnouncer({ classId }: PrizeProps) {
                     key={student.studentId}
                     className={`p-4 rounded-lg border-2 ${
                       idx === 0
-                        ? 'border-yellow-300 bg-yellow-50'
+                        ? 'border-yellow-500/50 bg-yellow-500/10'
                         : idx === 1
-                        ? 'border-gray-300 bg-gray-50'
-                        : 'border-orange-300 bg-orange-50'
+                        ? 'border-gray-400/50 bg-gray-500/10'
+                        : 'border-orange-500/50 bg-orange-500/10'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -133,10 +133,10 @@ export default function PrizeAnnouncer({ classId }: PrizeProps) {
                         <div className="flex items-center gap-3">
                           <span className="text-4xl">{student.badge}</span>
                           <div>
-                            <div className="font-bold text-gray-900">
+                            <div className="font-bold text-white">
                               {student.firstName} {student.lastName}
                             </div>
-                            <div className="text-sm text-gray-600">{student.email}</div>
+                            <div className="text-sm text-gray-400">{student.email}</div>
                           </div>
                         </div>
                         <div className="mt-2 text-sm">

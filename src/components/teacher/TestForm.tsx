@@ -166,7 +166,7 @@ export default function TestForm({ classId, onSuccess }: TestFormProps) {
         <Card>
           <Card.Header title={`Add Questions (${questions.length} added)`} />
           <Card.Body className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+            <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4 space-y-3">
               <Input
                 label="Question"
                 value={currentQuestion.question || ''}
@@ -195,7 +195,7 @@ export default function TestForm({ classId, onSuccess }: TestFormProps) {
 
               {currentQuestion.type === 'multiple_choice' && (
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Options</label>
+                  <label className="block text-sm font-medium text-gray-300">Options</label>
                   {(currentQuestion.options || []).map((option, idx) => (
                     <Input
                       key={idx}
@@ -255,14 +255,14 @@ export default function TestForm({ classId, onSuccess }: TestFormProps) {
             {/* Added Questions */}
             {questions.length > 0 && (
               <div className="space-y-2">
-                <h3 className="font-semibold text-gray-900">Added Questions:</h3>
+                <h3 className="font-semibold text-white">Added Questions:</h3>
                 {questions.map((q, idx) => (
-                  <div key={q.id} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg">
+                  <div key={q.id} className="flex items-start justify-between p-3 bg-white/5 border border-white/10 rounded-lg">
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium text-white">
                         {idx + 1}. {q.question}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">
+                      <div className="text-sm text-gray-400 mt-1">
                         Type: {q.type} | Marks: {q.marks} | Difficulty: {q.difficulty}
                       </div>
                     </div>

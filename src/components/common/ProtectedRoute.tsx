@@ -30,9 +30,9 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-primary">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900">
         <div className="text-center">
-          <div className="animate-spin text-5xl mb-4">⚙️</div>
+          <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-white text-lg">Loading...</p>
         </div>
       </div>
@@ -41,10 +41,10 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
   if (requiredRole && user?.role !== requiredRole) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-primary">
-        <div className="bg-white rounded-lg p-8 text-center max-w-md">
-          <p className="text-red-600 font-semibold mb-4">Access Denied</p>
-          <p className="text-gray-600">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900">
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-8 text-center max-w-md">
+          <p className="text-red-400 font-semibold mb-4">Access Denied</p>
+          <p className="text-gray-300">
             This page is only available to {requiredRole}s.
           </p>
         </div>

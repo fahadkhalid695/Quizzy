@@ -136,7 +136,7 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
       <Card.Body className="space-y-6">
         {/* Source Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">Choose Source</label>
+          <label className="block text-sm font-medium text-gray-300 mb-3">Choose Source</label>
           <div className="grid grid-cols-4 gap-3">
             {(['file', 'web', 'text', 'topic'] as const).map((s) => (
               <button
@@ -144,8 +144,8 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
                 onClick={() => setSource(s)}
                 className={`py-3 rounded-lg font-medium transition ${
                   source === s
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
               >
                 {s === 'file' && '📄 File'}
@@ -160,13 +160,13 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
         {/* Source Input */}
         {source === 'file' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Upload File (PDF, DOCX, PPTX, Images)
             </label>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition"
+              className="w-full border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-purple-500 transition bg-white/5"
             >
               <input
                 ref={fileInputRef}
@@ -178,14 +178,14 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
               {file ? (
                 <>
                   <div className="text-2xl mb-2">✓</div>
-                  <p className="font-medium text-gray-900">{file.name}</p>
-                  <p className="text-sm text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                  <p className="font-medium text-white">{file.name}</p>
+                  <p className="text-sm text-gray-400">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                 </>
               ) : (
                 <>
                   <div className="text-4xl mb-2">📁</div>
-                  <p className="font-medium text-gray-900">Click to select file</p>
-                  <p className="text-sm text-gray-500">or drag and drop</p>
+                  <p className="font-medium text-white">Click to select file</p>
+                  <p className="text-sm text-gray-400">or drag and drop</p>
                 </>
               )}
             </button>
@@ -194,25 +194,25 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
 
         {source === 'web' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Website URL</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Website URL</label>
             <input
               type="url"
               value={webUrl}
               onChange={(e) => setWebUrl(e.target.value)}
               placeholder="https://example.com/article"
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-600 focus:outline-none"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
             />
           </div>
         )}
 
         {source === 'text' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Paste Text Content</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Paste Text Content</label>
             <textarea
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
               placeholder="Paste your study material here..."
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-600 focus:outline-none"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
               rows={6}
             />
           </div>
@@ -221,7 +221,7 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
         {source === 'topic' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 🔬 Research Topic
               </label>
               <input
@@ -229,15 +229,15 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
                 value={topicInput}
                 onChange={(e) => setTopicInput(e.target.value)}
                 placeholder="e.g., Photosynthesis, World War II, Quantum Computing..."
-                className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-indigo-600 focus:outline-none"
+                className="w-full bg-white/5 border-2 border-white/10 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 AI will research this topic and generate comprehensive quiz questions
               </p>
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Question Types</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Question Types</label>
               <div className="flex flex-wrap gap-2">
                 {[
                   { value: 'multiple_choice', label: '📝 Multiple Choice' },
@@ -250,8 +250,8 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
                     onClick={() => toggleQuestionType(value)}
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
                       questionTypes.includes(value)
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
                     }`}
                   >
                     {label}
@@ -265,22 +265,22 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
         {/* Settings */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Number of Questions</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Number of Questions</label>
             <input
               type="number"
               min="1"
               max="20"
               value={numQuestions}
               onChange={(e) => setNumQuestions(parseInt(e.target.value))}
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty Level</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Difficulty Level</label>
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as any)}
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-lg px-4 py-2 text-white focus:border-purple-500 focus:outline-none"
             >
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
@@ -302,29 +302,29 @@ export default function TestGenerator({ onQuestionsGenerated }: TestGeneratorPro
 
         {/* Research Summary */}
         {researchSummary && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-bold text-blue-900 mb-2">📚 Research Summary</h3>
-            <p className="text-blue-800 text-sm whitespace-pre-wrap">{researchSummary}</p>
+          <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4">
+            <h3 className="font-bold text-blue-400 mb-2">📚 Research Summary</h3>
+            <p className="text-blue-200 text-sm whitespace-pre-wrap">{researchSummary}</p>
           </div>
         )}
 
         {/* Generated Questions Preview */}
         {generatedQuestions.length > 0 && (
           <div className="mt-6 space-y-3">
-            <h3 className="font-bold text-lg text-gray-900">Generated Questions Preview:</h3>
+            <h3 className="font-bold text-lg text-white">Generated Questions Preview:</h3>
             {generatedQuestions.map((q, idx) => (
-              <div key={idx} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <p className="font-medium text-gray-900">
+              <div key={idx} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="font-medium text-white">
                   {idx + 1}. {q.question}
                 </p>
                 <div className="mt-2 flex gap-2 text-xs">
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                  <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">
                     {q.type.replace('_', ' ')}
                   </span>
-                  <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                  <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded">
                     {q.difficulty}
                   </span>
-                  <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                  <span className="bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
                     {q.marks} marks
                   </span>
                 </div>

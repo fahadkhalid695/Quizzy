@@ -137,14 +137,14 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
   const allAnswered = Array.from(answers.values()).every((a) => a !== '' && a !== null);
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-indigo-50 to-purple-50">
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between shadow-sm">
+      <div className="bg-black/40 backdrop-blur-xl border-b border-white/10 p-4 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{test.title}</h1>
-          <p className="text-sm text-gray-500">{test.description}</p>
+          <h1 className="text-2xl font-bold text-white">{test.title}</h1>
+          <p className="text-sm text-gray-400">{test.description}</p>
         </div>
-        <div className={`text-2xl font-bold ${timeLeft <= 300 ? 'text-red-600' : 'text-indigo-600'}`}>
+        <div className={`text-2xl font-bold ${timeLeft <= 300 ? 'text-red-400' : 'text-purple-400'}`}>
           ⏱️ {minutes}:{seconds.toString().padStart(2, '0')}
         </div>
       </div>
@@ -152,8 +152,8 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
       {/* Main Content */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 overflow-hidden">
         {/* Question Navigator */}
-        <div className="lg:col-span-1 bg-white rounded-lg shadow p-4 overflow-y-auto">
-          <h2 className="font-bold text-gray-900 mb-3">Questions ({answers.size}/{test.questions.length})</h2>
+        <div className="lg:col-span-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 overflow-y-auto">
+          <h2 className="font-bold text-white mb-3">Questions ({answers.size}/{test.questions.length})</h2>
           <div className="grid grid-cols-4 lg:grid-cols-2 gap-2">
             {test.questions.map((q: Question, idx: number) => (
               <button
@@ -161,10 +161,10 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
                 onClick={() => setCurrentQuestionIdx(idx)}
                 className={`aspect-square rounded-lg font-bold text-sm transition ${
                   idx === currentQuestionIdx
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-purple-600 text-white'
                     : answers.has(q._id)
-                    ? 'bg-green-100 text-green-900 border-2 border-green-300'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
               >
                 {idx + 1}
@@ -174,7 +174,7 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
         </div>
 
         {/* Question Content */}
-        <div className="lg:col-span-3 bg-white rounded-lg shadow p-6 overflow-y-auto">
+        <div className="lg:col-span-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 overflow-y-auto">
           <Card className="border-0 shadow-none">
             <Card.Header
               title={`Question ${currentQuestionIdx + 1}/${test.questions.length}`}
@@ -242,7 +242,7 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
                     value={answers.get(currentQuestion._id) || ''}
                     onChange={(e) => handleAnswerChange(currentQuestion._id, e.target.value)}
                     placeholder="Type your answer here..."
-                    className="w-full border-2 border-gray-300 rounded-lg p-4 focus:border-indigo-600 focus:outline-none"
+                    className="w-full bg-white/5 border-2 border-white/10 rounded-lg p-4 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none"
                     rows={currentQuestion.type === 'essay' ? 8 : 3}
                   />
                 )}
@@ -253,7 +253,7 @@ export default function TestTaking({ testId, classId, onSubmit }: TestTakingProp
       </div>
 
       {/* Footer Navigation */}
-      <div className="bg-white border-t border-gray-200 p-4 flex items-center justify-between">
+      <div className="bg-black/40 backdrop-blur-xl border-t border-white/10 p-4 flex items-center justify-between">
         <Button
           variant="secondary"
           onClick={() => setCurrentQuestionIdx((prev) => Math.max(0, prev - 1))}
