@@ -127,7 +127,7 @@ export default function TestsPage() {
               <div className="text-4xl mb-4">📚</div>
               {classes.length === 0 ? (
                 <>
-                  <p className="text-gray-400 text-lg">You haven't joined any classes yet</p>
+                  <p className="text-gray-400 text-lg">You haven&apos;t joined any classes yet</p>
                   <p className="text-gray-500 text-sm">Join a class using a code from your teacher to see available tests</p>
                   
                   {/* Join Class Form */}
@@ -153,9 +153,9 @@ export default function TestsPage() {
               ) : (
                 <>
                   <p className="text-gray-400 text-lg">No tests available yet</p>
-                  <p className="text-gray-500 text-sm">Your teacher hasn't published any tests for your classes yet</p>
+                  <p className="text-gray-500 text-sm">Your teacher hasn&apos;t published any tests for your classes yet</p>
                   <div className="text-sm text-gray-500 mt-4">
-                    <p>You're enrolled in {classes.length} class(es):</p>
+                    <p>You&apos;re enrolled in {classes.length} class(es):</p>
                     <ul className="mt-2 space-y-1">
                       {classes.map(c => (
                         <li key={c.id} className="text-purple-400">{c.name}</li>
