@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
 import TestTaking from '@/components/student/TestTaking';
 import Results from '@/components/student/Results';
@@ -9,7 +9,9 @@ import Results from '@/components/student/Results';
 export default function TestPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const testId = params?.testId as string;
+  const classId = searchParams?.get('classId') || '';
   const [resultId, setResultId] = useState<string | null>(null);
   const user = useAuthStore((state) => state.user);
 
@@ -44,5 +46,5 @@ export default function TestPage() {
     return <Results resultId={resultId} testId={testId} onClose={() => router.push('/student/dashboard')} />;
   }
 
-  return <TestTaking testId={testId} classId="" onSubmit={(id) => setResultId(id)} />;
+  return <TestTaking testId={testId} classId={classId} onSubmit={(id) => setResultId(id)} />;
 }

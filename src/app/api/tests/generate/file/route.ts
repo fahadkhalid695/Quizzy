@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       const imageBuffer = await file.arrayBuffer();
       const base64Image = Buffer.from(imageBuffer).toString('base64');
       
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       
       const result = await model.generateContent([
         {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       const pdfBuffer = await file.arrayBuffer();
       const base64Pdf = Buffer.from(pdfBuffer).toString('base64');
       
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       
       const result = await model.generateContent([
         {
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       const docBuffer = await file.arrayBuffer();
       const base64Doc = Buffer.from(docBuffer).toString('base64');
       
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       
       const result = await model.generateContent([
         {
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       const pptBuffer = await file.arrayBuffer();
       const base64Ppt = Buffer.from(pptBuffer).toString('base64');
       
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       
       const result = await model.generateContent([
         {
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate questions from extracted content
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
     const questionTypeInstructions = questionTypes.map((type: string) => {
       if (type === 'multiple_choice') return 'Multiple choice questions with 4 options';

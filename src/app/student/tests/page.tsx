@@ -77,8 +77,8 @@ export default function TestsPage() {
     }
   };
 
-  const handleStartTest = (testId: string) => {
-    router.push(`/student/test/${testId}`);
+  const handleStartTest = (testId: string, classId: string) => {
+    router.push(`/student/test/${testId}?classId=${classId}`);
   };
 
   if (loading) {
@@ -172,7 +172,7 @@ export default function TestsPage() {
               <div
                 key={test.id}
                 className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:bg-white/15 hover:border-purple-400/50 transition cursor-pointer"
-                onClick={() => handleStartTest(test.id)}
+                onClick={() => handleStartTest(test.id, test.classId?.id || '')}
               >
                 <div className="space-y-3">
                   <h3 className="text-xl font-bold text-white">{test.title}</h3>
@@ -203,7 +203,10 @@ export default function TestsPage() {
                   <Button
                     variant="primary"
                     className="w-full"
-                    onClick={() => handleStartTest(test.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStartTest(test.id, test.classId?.id || '');
+                    }}
                   >
                     Start Test →
                   </Button>
