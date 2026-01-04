@@ -4,6 +4,8 @@ import { verifyToken } from '@/lib/auth-middleware';
 import Test from '@/models/Test';
 import Class from '@/models/Class';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     await connectDB();

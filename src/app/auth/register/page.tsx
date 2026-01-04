@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Button from '@/components/ui/Button'
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/FormElements'
 import Card from '@/components/ui/Card'
 const { Header: CardHeader, Body: CardBody, Footer: CardFooter } = Card
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -196,5 +196,13 @@ export default function RegisterPage() {
         </Link>
       </p>
     </div>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900" />}>
+      <RegisterContent />
+    </Suspense>
   )
 }

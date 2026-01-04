@@ -1,18 +1,22 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import '@/styles/globals.css'
 
 export const metadata: Metadata = {
-  title: 'Quiz App - Dynamic Testing Platform',
+  title: 'QuizMaster - AI-Powered Quiz Platform',
   description:
-    'Comprehensive Quiz Management System with AI-powered test generation, auto-grading, and cheating detection',
-  keywords: ['quiz', 'test', 'education', 'learning management system'],
-  viewport: 'width=device-width, initial-scale=1',
+    'Comprehensive Quiz Management System with AI-powered test generation, auto-grading, and analytics',
+  keywords: ['quiz', 'test', 'education', 'learning management system', 'AI'],
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'http://localhost:3000',
-    siteName: 'Quiz App',
+    url: 'https://quizmaster.app',
+    siteName: 'QuizMaster',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
