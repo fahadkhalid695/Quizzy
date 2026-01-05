@@ -130,6 +130,27 @@ export default function StudentDashboard() {
     }
   }, [hasHydrated, user, router]);
 
+  const handleLogout = () => {
+    logout();
+    router.push('/');
+  };
+
+  const navItems = [
+    { icon: '🏠', label: 'Dashboard', href: '/student/dashboard', active: true },
+    { icon: '📨', label: 'Invitations', href: '#', badge: pendingInvitations, onClick: () => setActiveTab('invitations') },
+    { icon: '📝', label: 'Available Tests', href: '/student/tests' },
+    { icon: '📈', label: 'My Results', href: '/student/results' },
+    { icon: '🏆', label: 'Leaderboard', href: '/student/leaderboard' },
+    { icon: '⚙️', label: 'Settings', href: '/student/settings' },
+  ];
+
+  const statCards = [
+    { label: 'Tests Taken', value: stats.testsTaken.toString(), icon: '📝', color: 'from-blue-500 to-cyan-500', change: `${stats.totalTests} available` },
+    { label: 'Average Score', value: `${stats.averageScore}%`, icon: '📊', color: 'from-purple-500 to-pink-500', change: stats.averageScore >= 70 ? 'Great work!' : 'Keep practicing' },
+    { label: 'Best Score', value: `${stats.bestScore}%`, icon: '⭐', color: 'from-yellow-500 to-orange-500', change: stats.bestScore >= 90 ? 'Excellent!' : 'Personal best' },
+    { label: 'Tests Available', value: stats.totalTests.toString(), icon: '🏆', color: 'from-green-500 to-emerald-500', change: 'Ready to take' },
+  ];
+
   // Show loading while hydrating
   if (!hasHydrated) {
     return (
@@ -153,27 +174,6 @@ export default function StudentDashboard() {
       </div>
     );
   }
-
-  const handleLogout = () => {
-    logout();
-    router.push('/');
-  };
-
-  const navItems = [
-    { icon: '🏠', label: 'Dashboard', href: '/student/dashboard', active: true },
-    { icon: '📨', label: 'Invitations', href: '#', badge: pendingInvitations, onClick: () => setActiveTab('invitations') },
-    { icon: '📝', label: 'Available Tests', href: '/student/tests' },
-    { icon: '📈', label: 'My Results', href: '/student/results' },
-    { icon: '🏆', label: 'Leaderboard', href: '/student/leaderboard' },
-    { icon: '⚙️', label: 'Settings', href: '/student/settings' },
-  ];
-
-  const statCards = [
-    { label: 'Tests Taken', value: stats.testsTaken.toString(), icon: '📝', color: 'from-blue-500 to-cyan-500', change: `${stats.totalTests} available` },
-    { label: 'Average Score', value: `${stats.averageScore}%`, icon: '📊', color: 'from-purple-500 to-pink-500', change: stats.averageScore >= 70 ? 'Great work!' : 'Keep practicing' },
-    { label: 'Best Score', value: `${stats.bestScore}%`, icon: '⭐', color: 'from-yellow-500 to-orange-500', change: stats.bestScore >= 90 ? 'Excellent!' : 'Personal best' },
-    { label: 'Tests Available', value: stats.totalTests.toString(), icon: '🏆', color: 'from-green-500 to-emerald-500', change: 'Ready to take' },
-  ];
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900">
@@ -453,23 +453,6 @@ export default function StudentDashboard() {
                 </div>
               )}
             </div>
-                                difficultyColor === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-red-500/20 text-red-400'
-                              }`}>
-                                {test.difficulty}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <Button variant="primary" size="sm" onClick={() => router.push(`/student/test/${test.id}`)}>
-                          Start →
-                        </Button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
 
             {/* Quick Actions + Recent Activity */}
             <div className="space-y-4 md:space-y-6">
@@ -535,5 +518,5 @@ export default function StudentDashboard() {
         </div>
       </main>
     </div>
-  )
+  );
 }
