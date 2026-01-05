@@ -35,8 +35,17 @@ export default function ClassList({ refreshTrigger = 0 }: ClassListProps) {
     try {
       setLoading(true);
       const response = await api.get<{ classes: any[] }>('/api/classes/list');
-      setClasses(response.classes || []);
+      // Map classes to ensure consistent id property
+      const mappedClasses = (response.classes || []).map((cls: any) => ({
+        id: cls._id || cls.id,
+        name: cls.name,
+        description: cls.description,
+        code: cls.code,
+        students: cls.students || [],
+      }));
+      setClasses(mappedClasses);
     } catch (error) {
+      console.error('Failed to fetch classes:', error);
       notify.error('Failed to fetch classes');
     } finally {
       setLoading(false);
