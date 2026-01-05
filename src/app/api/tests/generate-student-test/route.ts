@@ -169,7 +169,31 @@ export async function POST(request: NextRequest) {
     const totalMarks = studentQuestions.reduce((sum, q) => sum + (q.marks || 1), 0);
 
     // Store the assigned questions for grading later
-    // This will be done when the student actually starts the test
+    // Create or update StudentTest record with the assigned questions
+    try {
+      const studentTestRecord = await StudentTest.findOneAndUpdate(
+        { testId, studentId: payload.userId },
+        {
+          testId,
+          studentId: payload.userId,
+          assignedQuestions: studentQuestions.map((q: any) => ({
+            question: q.question,
+            type: q.type || 'multiple_choice',
+            options: q.options || [],
+            correctAnswer: q.correctAnswer,
+            marks: q.marks || 1,
+            difficulty: q.difficulty || 'medium',
+          })),
+          status: 'assigned',
+          startedAt: new Date(),
+        },
+        { upsert: true, new: true }
+      );
+      console.log('StudentTest record created/updated:', studentTestRecord._id);
+    } catch (saveError) {
+      console.error('Failed to save StudentTest record:', saveError);
+      // Continue even if save fails - the grading will try other fallbacks
+    }
     
     console.log('Dynamic test - returning questions:', studentQuestions.length);
     console.log('First student question:', JSON.stringify(studentQuestions[0], null, 2));

@@ -154,89 +154,148 @@ export default function Results({ resultId, testId, onClose }: ResultsProps) {
       </Card>
 
       {/* Answer Review */}
-      {test && (
-        <Card>
-          <Card.Header title="Answer Review" />
-          <Card.Body className="space-y-3">
-            {result.answers.map((answer: any, idx: number) => {
-              const question = test.questions.find((q: any) => q._id === answer.questionId);
-              if (!question) return null;
+      <Card>
+        <Card.Header title="Answer Review" />
+        <Card.Body className="space-y-3">
+          {result.answers.map((answer: any, idx: number) => {
+            // For newer submissions, question details are embedded in the answer
+            // For older submissions, try to find from test.questions
+            let questionText = answer.questionText;
+            let questionType = answer.questionType;
+            let options = answer.options;
+            let correctAnswer = answer.correctAnswer;
+            let explanation = '';
+            let questionMarks = answer.marks || 1;
+            
+            // Fallback to test.questions if question details not in answer
+            if (!questionText && test?.questions) {
+              const question = test.questions.find((q: any) => 
+                q._id === answer.questionId || q._id?.toString() === answer.questionId
+              ) || test.questions[idx];
+              
+              if (question) {
+                questionText = question.question;
+                questionType = question.type;
+                options = question.options;
+                correctAnswer = question.correctAnswer;
+                explanation = question.explanation;
+                questionMarks = question.marks || 1;
+              }
+            }
 
-              const isExpanded = expandedQuestions.has(answer.questionId);
+            const isExpanded = expandedQuestions.has(answer.questionId || idx.toString());
+            const studentAnswer = answer.studentAnswer || answer.answer || '(Not answered)';
 
-              return (
-                <div
-                  key={answer.questionId}
-                  className="border border-gray-200 rounded-lg overflow-hidden"
+            return (
+              <div
+                key={answer.questionId || idx}
+                className="border border-gray-200 rounded-lg overflow-hidden"
+              >
+                <button
+                  onClick={() => {
+                    const key = answer.questionId || idx.toString();
+                    const newSet = new Set(expandedQuestions);
+                    if (newSet.has(key)) {
+                      newSet.delete(key);
+                    } else {
+                      newSet.add(key);
+                    }
+                    setExpandedQuestions(newSet);
+                  }}
+                  className="w-full p-4 flex items-start justify-between hover:bg-gray-50 transition"
                 >
-                  <button
-                    onClick={() => {
-                      const newSet = new Set(expandedQuestions);
-                      if (newSet.has(answer.questionId)) {
-                        newSet.delete(answer.questionId);
-                      } else {
-                        newSet.add(answer.questionId);
-                      }
-                      setExpandedQuestions(newSet);
-                    }}
-                    className="w-full p-4 flex items-start justify-between hover:bg-gray-50 transition"
-                  >
-                    <div className="text-left flex-1">
-                      <div className="font-medium text-gray-900">
-                        Q{idx + 1}. {question.question}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        {answer.marksObtained}/{question.marks} marks
-                      </div>
+                  <div className="text-left flex-1">
+                    <div className="font-medium text-gray-900">
+                      Q{idx + 1}. {questionText || 'Question not available'}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          answer.isCorrect
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {answer.isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                    <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-gray-100 rounded text-xs">
+                        {(questionType || 'multiple_choice').replace('_', ' ')}
                       </span>
-                      <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
+                      <span>{answer.marksObtained || 0}/{questionMarks} marks</span>
                     </div>
-                  </button>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        answer.isCorrect
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {answer.isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                    </span>
+                    <span className="text-gray-500">{isExpanded ? '▲' : '▼'}</span>
+                  </div>
+                </button>
 
-                  {isExpanded && (
-                    <div className="p-4 bg-gray-50 border-t border-gray-200 space-y-3">
+                {isExpanded && (
+                  <div className="p-4 bg-gray-50 border-t border-gray-200 space-y-3">
+                    {/* Show options for MCQ/True-False */}
+                    {options && options.length > 0 && (
                       <div>
-                        <label className="text-sm font-medium text-gray-700">Your Answer:</label>
-                        <div className="mt-1 p-3 bg-white rounded border border-gray-200 text-gray-900">
-                          {answer.answer || '(Not answered)'}
+                        <label className="text-sm font-medium text-gray-700">Options:</label>
+                        <div className="mt-1 space-y-1">
+                          {options.map((opt: string, optIdx: number) => (
+                            <div
+                              key={optIdx}
+                              className={`p-2 rounded border text-sm ${
+                                opt === correctAnswer
+                                  ? 'bg-green-50 border-green-300 text-green-800'
+                                  : opt === studentAnswer && !answer.isCorrect
+                                  ? 'bg-red-50 border-red-300 text-red-800'
+                                  : opt === studentAnswer
+                                  ? 'bg-blue-50 border-blue-300 text-blue-800'
+                                  : 'bg-white border-gray-200 text-gray-700'
+                              }`}
+                            >
+                              {opt === correctAnswer && '✓ '}
+                              {opt === studentAnswer && opt !== correctAnswer && '✗ '}
+                              {opt}
+                              {opt === studentAnswer && ' (Your answer)'}
+                              {opt === correctAnswer && opt !== studentAnswer && ' (Correct answer)'}
+                            </div>
+                          ))}
                         </div>
                       </div>
-
-                      {!answer.isCorrect && (
+                    )}
+                    
+                    {/* For short answer/essay - show text answers */}
+                    {(!options || options.length === 0) && (
+                      <>
                         <div>
-                          <label className="text-sm font-medium text-gray-700">Correct Answer:</label>
-                          <div className="mt-1 p-3 bg-green-50 rounded border border-green-200 text-green-900">
-                            {question.correctAnswer}
+                          <label className="text-sm font-medium text-gray-700">Your Answer:</label>
+                          <div className="mt-1 p-3 bg-white rounded border border-gray-200 text-gray-900">
+                            {studentAnswer}
                           </div>
                         </div>
-                      )}
 
-                      {question.explanation && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Explanation:</label>
-                          <div className="mt-1 p-3 bg-blue-50 rounded border border-blue-200 text-blue-900 text-sm">
-                            {question.explanation}
+                        {!answer.isCorrect && correctAnswer && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Correct Answer:</label>
+                            <div className="mt-1 p-3 bg-green-50 rounded border border-green-200 text-green-900">
+                              {correctAnswer}
+                            </div>
                           </div>
+                        )}
+                      </>
+                    )}
+
+                    {explanation && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Explanation:</label>
+                        <div className="mt-1 p-3 bg-blue-50 rounded border border-blue-200 text-blue-900 text-sm">
+                          {explanation}
                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </Card.Body>
-        </Card>
-      )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </Card.Body>
+      </Card>
 
       {/* Actions */}
       {onClose && (

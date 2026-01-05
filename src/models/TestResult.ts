@@ -5,9 +5,15 @@ interface ITestResultDocument extends Omit<ITestResult, '_id'>, Document {}
 
 const answerSchema = new Schema({
   questionId: String,
-  answer: String,
+  questionText: String,
+  questionType: String,
+  options: [String],
+  correctAnswer: String,
+  studentAnswer: String,
+  answer: String, // Keep for backward compatibility
   isCorrect: Boolean,
   marksObtained: Number,
+  marks: Number, // Total marks for this question
   timeSpent: Number,
 })
 

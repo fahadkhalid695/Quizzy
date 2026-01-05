@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-middleware';
 import Test from '@/models/Test';
 import TestResult from '@/models/TestResult';
+import StudentTest from '@/models/StudentTest';
 import { gradeShortAnswer, detectCheating } from '@/lib/gemini';
 
 export async function POST(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { testId, classId, answers } = body;
+    const { testId, classId, answers, assignedQuestions: submittedQuestions } = body;
     
     console.log('Submit request:', { testId, classId, answersCount: answers?.length });
 
@@ -51,37 +52,97 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // For dynamic tests, get the questions that were shown to this student
+    let questionsToGrade: any[] = [];
+    
+    if (test.isDynamic) {
+      // PRIORITY: Get from StudentTest record (has correct answers stored securely)
+      const studentTest = await StudentTest.findOne({
+        testId,
+        studentId: payload.userId,
+      }).sort({ createdAt: -1 });
+      
+      if (studentTest && studentTest.assignedQuestions && studentTest.assignedQuestions.length > 0) {
+        questionsToGrade = studentTest.assignedQuestions.map((q: any) => {
+          const plainQ = q.toObject ? q.toObject() : q;
+          return plainQ;
+        });
+        console.log('Using StudentTest questions for grading (with correct answers):', questionsToGrade.length);
+      } else if (submittedQuestions && submittedQuestions.length > 0) {
+        // Fallback to submitted questions (but correctAnswer might be missing)
+        // Try to match with question pool to get correct answers
+        const pool = test.dynamicSettings?.questionPool || test.questions || [];
+        questionsToGrade = submittedQuestions.map((sq: any) => {
+          // Find matching question in pool by question text
+          const poolQuestion = pool.find((pq: any) => {
+            const pqPlain = pq.toObject ? pq.toObject() : pq;
+            return pqPlain.question === sq.question;
+          });
+          if (poolQuestion) {
+            const plainPool = poolQuestion.toObject ? poolQuestion.toObject() : poolQuestion;
+            return {
+              ...sq,
+              correctAnswer: plainPool.correctAnswer,
+            };
+          }
+          return sq;
+        });
+        console.log('Using submitted questions matched with pool:', questionsToGrade.length);
+      } else {
+        // Last fallback: use the dynamic pool
+        const pool = test.dynamicSettings?.questionPool || test.questions;
+        questionsToGrade = pool.map((q: any) => {
+          const plainQ = q.toObject ? q.toObject() : q;
+          return plainQ;
+        });
+        console.log('Fallback: Using full question pool for grading:', questionsToGrade.length);
+      }
+    } else {
+      // Non-dynamic test - use regular questions
+      questionsToGrade = test.questions.map((q: any) => {
+        const plainQ = q.toObject ? q.toObject() : q;
+        return plainQ;
+      });
+    }
+    
+    console.log('Questions to grade:', questionsToGrade.length);
+    if (questionsToGrade[0]) {
+      console.log('First question for grading:', JSON.stringify(questionsToGrade[0], null, 2));
+    }
+
     // Grade the test
     let totalMarks = 0;
     let obtainedMarks = 0;
     const gradedAnswers = [];
     const answerTexts: string[] = [];
 
-    // For grading, we need to handle both:
-    // 1. Non-dynamic tests: questionId is MongoDB ObjectId
-    // 2. Dynamic tests: questionId is index (0, 1, 2, etc.)
-    
+    // Grade each answer using the questionsToGrade array
     for (const answer of answers) {
-      // Try to find question by _id first (for non-dynamic tests)
-      let question = test.questions.find(
-        (q: any) => q._id.toString() === answer.questionId
-      );
+      // For dynamic tests, questionId is index (0, 1, 2, etc.)
+      // For non-dynamic tests, it could be _id or index
+      let question = null;
+      const idx = parseInt(answer.questionId, 10);
       
-      // If not found, try by index (for dynamic tests)
+      // Try by index first (works for both dynamic and non-dynamic)
+      if (!isNaN(idx) && idx >= 0 && idx < questionsToGrade.length) {
+        question = questionsToGrade[idx];
+      }
+      
+      // If not found by index, try by _id (for non-dynamic tests)
       if (!question) {
-        const idx = parseInt(answer.questionId, 10);
-        if (!isNaN(idx) && idx >= 0 && idx < test.questions.length) {
-          question = test.questions[idx];
-        }
+        question = questionsToGrade.find(
+          (q: any) => q._id?.toString() === answer.questionId
+        );
       }
 
       if (!question) {
-        console.log('Question not found for questionId:', answer.questionId);
+        console.log('Question not found for questionId:', answer.questionId, 'in', questionsToGrade.length, 'questions');
         continue;
       }
       
       console.log('Grading question:', { 
         questionId: answer.questionId, 
+        questionText: question.question?.substring(0, 50),
         type: question.type,
         studentAnswer: answer.answer,
         correctAnswer: question.correctAnswer 
@@ -170,9 +231,15 @@ export async function POST(request: NextRequest) {
       answerTexts.push(answer.answer);
       gradedAnswers.push({
         questionId: answer.questionId,
+        questionText: question.question || '',
+        questionType: question.type || 'multiple_choice',
+        options: question.options || [],
+        correctAnswer: question.correctAnswer || '',
+        studentAnswer: answer.answer || '',
         answer: answer.answer,
         isCorrect,
         marksObtained,
+        marks: marks,
         timeSpent: answer.timeSpent || 0,
       });
     }
@@ -181,20 +248,11 @@ export async function POST(request: NextRequest) {
     let cheatingScore = 0;
     let cheatingDetails: string[] = [];
     try {
-      // Prepare answers for cheating detection
-      const answersForCheating = answers.map((answer: any) => {
-        // Find question by _id or by index
-        let question = test.questions.find(
-          (q: any) => q._id.toString() === answer.questionId
-        );
-        if (!question) {
-          const idx = parseInt(answer.questionId, 10);
-          if (!isNaN(idx) && idx >= 0 && idx < test.questions.length) {
-            question = test.questions[idx];
-          }
-        }
+      // Prepare answers for cheating detection using questionsToGrade
+      const answersForCheating = answers.map((answer: any, idx: number) => {
+        const question = questionsToGrade[idx] || {};
         return {
-          question: question?.question || '',
+          question: question.question || '',
           answer: answer.answer || '',
         };
       });

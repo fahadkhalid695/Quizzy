@@ -80,10 +80,22 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
         timeSpent: 0,
       }));
 
+      // Include the questions for grading (especially important for dynamic tests)
+      const questionsForGrading = currentTest.questions.map((q: Question) => ({
+        question: q.question,
+        type: q.type,
+        options: q.options,
+        correctAnswer: '', // Don't send correct answer from client for security
+        marks: q.marks,
+        difficulty: q.difficulty,
+      }));
+
       const response = await api.post<{ result: { id: string }, alreadySubmitted?: boolean, existingResultId?: string }>('/api/tests/submit', {
         testId,
         classId: submitClassId,
         answers: answersArray,
+        // Send questions structure (without correct answers) to help match for grading
+        assignedQuestions: currentTest.isDynamic ? questionsForGrading : undefined,
       });
 
       notify.success('Test submitted successfully!');
