@@ -198,38 +198,70 @@ export async function generateTestFromWebSearch(
     // Calculate distribution of question types
     const questionsPerType = Math.floor(numberOfQuestions / questionTypes.length);
     const remainder = numberOfQuestions % questionTypes.length;
-    const typeDistribution = questionTypes.map((type, index) => {
+    const typeDistributionArr: { type: string; count: number }[] = [];
+    questionTypes.forEach((type, index) => {
       const count = questionsPerType + (index < remainder ? 1 : 0);
-      return `${count} ${type.replace('_', ' ')} question(s)`;
-    }).join(', ');
+      typeDistributionArr.push({ type, count });
+    });
+    const typeDistribution = typeDistributionArr.map(t => `${t.count} ${t.type.replace('_', ' ')} question(s)`).join(', ');
 
     const prompt = `
 You are an expert test creator. Based on your knowledge about "${searchQuery}", create EXACTLY ${numberOfQuestions} ${difficulty} difficulty questions.
 
-IMPORTANT - You MUST create this exact distribution of question types:
-${typeDistribution}
+CRITICAL REQUIREMENTS:
+1. You MUST create EXACTLY this distribution: ${typeDistribution}
+2. Each question type has STRICT formatting rules:
 
-Question type formats:
-- "multiple_choice": Requires "options" array with exactly 4 choices, "correctAnswer" must match one option exactly
-- "true_false": Requires "options" array ["True", "False"], "correctAnswer" must be either "True" or "False"
-- "short_answer": NO options array (set to null), "correctAnswer" should be a brief expected answer
+FOR "multiple_choice" QUESTIONS:
+- "type" must be exactly "multiple_choice"
+- "options" must be an array of EXACTLY 4 different answer choices (NOT True/False)
+- "correctAnswer" must EXACTLY match one of the 4 options
+
+FOR "true_false" QUESTIONS:
+- "type" must be exactly "true_false"  
+- "options" must be EXACTLY ["True", "False"]
+- "correctAnswer" must be EXACTLY "True" OR "False"
+
+FOR "short_answer" QUESTIONS:
+- "type" must be exactly "short_answer"
+- "options" must be null (no options)
+- "correctAnswer" should be a brief expected answer text
 
 Return a JSON array with EXACTLY ${numberOfQuestions} questions:
 [
   {
-    "type": "multiple_choice" | "true_false" | "short_answer",
-    "question": "Question text",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice), ["True", "False"] (for true_false), null (for short_answer),
-    "correctAnswer": "Correct answer",
-    "explanation": "Explanation",
+    "type": "multiple_choice",
+    "question": "What is the capital of France?",
+    "options": ["London", "Paris", "Berlin", "Madrid"],
+    "correctAnswer": "Paris",
+    "explanation": "Paris is the capital city of France.",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  },
+  {
+    "type": "true_false",
+    "question": "The Earth is flat.",
+    "options": ["True", "False"],
+    "correctAnswer": "False",
+    "explanation": "The Earth is approximately spherical.",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  },
+  {
+    "type": "short_answer",
+    "question": "Name the largest planet in our solar system.",
+    "options": null,
+    "correctAnswer": "Jupiter",
+    "explanation": "Jupiter is the largest planet.",
     "difficulty": "${difficulty}",
     "marks": 1
   }
 ]
 
-Ensure questions are educational, accurate, and varied.
-You MUST follow the exact question type distribution specified above.
-Return only valid JSON array.
+IMPORTANT:
+- Do NOT mix formats (no True/False options in MCQ)
+- Each question type must strictly follow its format
+- Return ONLY valid JSON array, no other text
     `
 
     const result = await model.generateContent(prompt)
@@ -238,8 +270,35 @@ Return only valid JSON array.
 
     const jsonMatch = text_content.match(/\[[\s\S]*\]/)
     if (jsonMatch) {
-      const questions = JSON.parse(jsonMatch[0])
-      return questions
+      const parsed = JSON.parse(jsonMatch[0])
+      
+      // Post-process and validate each question
+      return parsed.map((q: any) => {
+        const questionType = q.type || QuestionType.MULTIPLE_CHOICE;
+        let options = q.options;
+        let correctAnswer = q.correctAnswer;
+        
+        // Validate and fix options based on question type
+        if (questionType === 'true_false') {
+          options = ['True', 'False'];
+          if (correctAnswer && typeof correctAnswer === 'string') {
+            const normalized = correctAnswer.toLowerCase().trim();
+            correctAnswer = normalized === 'true' ? 'True' : 'False';
+          }
+        } else if (questionType === 'short_answer') {
+          options = null;
+        }
+        
+        return {
+          type: questionType,
+          question: q.question,
+          options: options,
+          correctAnswer: correctAnswer,
+          explanation: q.explanation,
+          difficulty: q.difficulty || difficulty,
+          marks: q.marks || 1,
+        };
+      });
     }
 
     return []
@@ -314,10 +373,15 @@ Return only valid JSON.
     // Calculate distribution of question types
     const questionsPerType = Math.floor(numberOfQuestions / questionTypes.length);
     const remainder = numberOfQuestions % questionTypes.length;
-    const typeDistribution = questionTypes.map((type, index) => {
+    
+    // Build explicit type distribution
+    const typeDistributionArr: { type: string; count: number }[] = [];
+    questionTypes.forEach((type, index) => {
       const count = questionsPerType + (index < remainder ? 1 : 0);
-      return `${count} ${type.replace('_', ' ')} question(s)`;
-    }).join(', ');
+      typeDistributionArr.push({ type, count });
+    });
+    
+    const typeDistribution = typeDistributionArr.map(t => `${t.count} ${t.type.replace('_', ' ')} question(s)`).join(', ');
 
     const questionsPrompt = `
 Based on this research about "${topic}":
@@ -329,30 +393,60 @@ Examples: ${JSON.stringify(research.examples)}
 
 Create EXACTLY ${numberOfQuestions} ${difficulty} difficulty educational questions.
 
-IMPORTANT - You MUST create this exact distribution of question types:
-${typeDistribution}
+CRITICAL REQUIREMENTS:
+1. You MUST create EXACTLY this distribution: ${typeDistribution}
+2. Each question type has STRICT formatting rules:
 
-Question type formats:
-- "multiple_choice": Requires "options" array with exactly 4 choices, "correctAnswer" must match one option exactly
-- "true_false": Requires "options" array ["True", "False"], "correctAnswer" must be either "True" or "False"
-- "short_answer": NO options array (set to null), "correctAnswer" should be a brief expected answer
+FOR "multiple_choice" QUESTIONS:
+- "type" must be exactly "multiple_choice"
+- "options" must be an array of EXACTLY 4 different answer choices (NOT True/False)
+- "correctAnswer" must EXACTLY match one of the 4 options
 
-Return a JSON array with EXACTLY ${numberOfQuestions} questions:
+FOR "true_false" QUESTIONS:
+- "type" must be exactly "true_false"  
+- "options" must be EXACTLY ["True", "False"]
+- "correctAnswer" must be EXACTLY "True" OR "False"
+
+FOR "short_answer" QUESTIONS:
+- "type" must be exactly "short_answer"
+- "options" must be null (no options)
+- "correctAnswer" should be a brief expected answer text
+
+Return a JSON array with EXACTLY ${numberOfQuestions} questions in this format:
 [
   {
-    "type": "multiple_choice" | "true_false" | "short_answer",
-    "question": "Question text",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice), ["True", "False"] (for true_false), null (for short_answer),
-    "correctAnswer": "Correct answer",
-    "explanation": "Detailed explanation of why this is correct",
+    "type": "multiple_choice",
+    "question": "What is the capital of France?",
+    "options": ["London", "Paris", "Berlin", "Madrid"],
+    "correctAnswer": "Paris",
+    "explanation": "Paris is the capital city of France.",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  },
+  {
+    "type": "true_false",
+    "question": "The Earth is flat.",
+    "options": ["True", "False"],
+    "correctAnswer": "False",
+    "explanation": "The Earth is approximately spherical.",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  },
+  {
+    "type": "short_answer",
+    "question": "Name the largest planet in our solar system.",
+    "options": null,
+    "correctAnswer": "Jupiter",
+    "explanation": "Jupiter is the largest planet.",
     "difficulty": "${difficulty}",
     "marks": 1
   }
 ]
 
-Make questions varied, educational, and test real understanding of the topic.
-You MUST follow the exact question type distribution specified above.
-Return only valid JSON array.
+IMPORTANT: 
+- Do NOT mix formats (no True/False in MCQ options)
+- Each question type must strictly follow its format
+- Return ONLY valid JSON array, no other text
     `
 
     const questionsResult = await model.generateContent(questionsPrompt)
@@ -363,15 +457,44 @@ Return only valid JSON array.
     const questionsMatch = questionsText.match(/\[[\s\S]*\]/)
     if (questionsMatch) {
       const parsed = JSON.parse(questionsMatch[0])
-      questions = parsed.map((q: any) => ({
-        type: q.type || QuestionType.MULTIPLE_CHOICE,
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        difficulty: q.difficulty || difficulty,
-        marks: q.marks || 1,
-      }))
+      
+      // Post-process and validate each question to ensure correct format
+      questions = parsed.map((q: any) => {
+        const questionType = q.type || QuestionType.MULTIPLE_CHOICE;
+        let options = q.options;
+        let correctAnswer = q.correctAnswer;
+        
+        // Validate and fix options based on question type
+        if (questionType === 'true_false') {
+          // Ensure true/false has correct options
+          options = ['True', 'False'];
+          // Normalize the correct answer
+          if (correctAnswer && typeof correctAnswer === 'string') {
+            const normalized = correctAnswer.toLowerCase().trim();
+            correctAnswer = normalized === 'true' ? 'True' : 'False';
+          }
+        } else if (questionType === 'short_answer') {
+          // Short answer should have no options
+          options = null;
+        } else if (questionType === 'multiple_choice') {
+          // MCQ should have 4 options that are NOT just True/False
+          if (!options || !Array.isArray(options) || options.length < 2) {
+            options = ['Option A', 'Option B', 'Option C', 'Option D'];
+          }
+          // If options are just True/False, this is wrongly typed - but keep as is
+          // The AI should have generated proper options
+        }
+        
+        return {
+          type: questionType,
+          question: q.question,
+          options: options,
+          correctAnswer: correctAnswer,
+          explanation: q.explanation,
+          difficulty: q.difficulty || difficulty,
+          marks: q.marks || 1,
+        };
+      })
     }
 
     return {

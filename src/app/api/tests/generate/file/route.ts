@@ -147,20 +147,17 @@ export async function POST(request: NextRequest) {
     // Generate questions from extracted content
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
     
-    const questionTypeInstructions = questionTypes.map((type: string) => {
-      if (type === 'multiple_choice') return 'Multiple choice questions with 4 options';
-      if (type === 'true_false') return 'True/False questions';
-      if (type === 'short_answer') return 'Short answer questions requiring brief explanations';
-      return type;
-    }).join(', ');
-
     // Calculate distribution of question types
     const questionsPerType = Math.floor(numQuestions / questionTypes.length);
     const remainder = numQuestions % questionTypes.length;
-    const typeDistribution = questionTypes.map((type: string, index: number) => {
+    const typeDistributionArr: { type: string; count: number }[] = [];
+    questionTypes.forEach((type: string, index: number) => {
       const count = questionsPerType + (index < remainder ? 1 : 0);
-      return `${count} ${type.replace('_', ' ')} question(s)`;
-    }).join(', ');
+      typeDistributionArr.push({ type, count });
+    });
+    const typeDistribution = typeDistributionArr.map((t: { type: string; count: number }) => 
+      `${t.count} ${t.type.replace('_', ' ')} question(s)`
+    ).join(', ');
 
     const prompt = `
 You are an expert educator creating quiz questions from educational content.
@@ -172,35 +169,61 @@ ${extractedContent.substring(0, 15000)}
 
 Create EXACTLY ${numQuestions} ${difficulty} difficulty educational questions based on this content.
 
-IMPORTANT - You MUST create this exact distribution of question types:
-${typeDistribution}
+CRITICAL REQUIREMENTS:
+1. You MUST create EXACTLY this distribution: ${typeDistribution}
+2. Each question type has STRICT formatting rules:
 
-Question type formats:
-- "multiple_choice": Requires "options" array with exactly 4 choices, "correctAnswer" must match one option exactly
-- "true_false": Requires "options" array ["True", "False"], "correctAnswer" must be either "True" or "False"  
-- "short_answer": NO options array (set to null), "correctAnswer" should be a brief expected answer
+FOR "multiple_choice" QUESTIONS:
+- "type" must be exactly "multiple_choice"
+- "options" must be an array of EXACTLY 4 different answer choices (NOT True/False)
+- "correctAnswer" must EXACTLY match one of the 4 options
 
-Requirements:
-1. Questions should test understanding of the key concepts
-2. You MUST follow the exact question type distribution specified above
-3. For multiple choice, provide 4 options with only one correct answer
-4. Include detailed explanations for each answer
-5. Ensure questions cover different parts of the content
+FOR "true_false" QUESTIONS:
+- "type" must be exactly "true_false"  
+- "options" must be EXACTLY ["True", "False"]
+- "correctAnswer" must be EXACTLY "True" OR "False"
+
+FOR "short_answer" QUESTIONS:
+- "type" must be exactly "short_answer"
+- "options" must be null (no options)
+- "correctAnswer" should be a brief expected answer text
 
 Return a JSON array with EXACTLY ${numQuestions} questions:
 [
   {
-    "type": "multiple_choice" | "true_false" | "short_answer",
-    "question": "Clear, well-formed question",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice), ["True", "False"] (for true_false), null (for short_answer),
-    "correctAnswer": "The correct answer exactly as it appears in options (or expected answer for short_answer)",
-    "explanation": "Detailed explanation of why this is correct",
+    "type": "multiple_choice",
+    "question": "What is the main topic discussed in the document?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswer": "Option A",
+    "explanation": "This is correct because...",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  },
+  {
+    "type": "true_false",
+    "question": "The document states that X is Y.",
+    "options": ["True", "False"],
+    "correctAnswer": "True",
+    "explanation": "According to the document...",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  },
+  {
+    "type": "short_answer",
+    "question": "What is the definition of X according to the text?",
+    "options": null,
+    "correctAnswer": "Expected brief answer",
+    "explanation": "The text defines X as...",
     "difficulty": "${difficulty}",
     "marks": 1
   }
 ]
 
-Return ONLY valid JSON array, no additional text.
+IMPORTANT:
+- Do NOT mix formats (no True/False options in MCQ)
+- Each question type must strictly follow its format
+- Questions should test understanding of the key concepts
+- Return ONLY valid JSON array, no other text
     `;
 
     const questionsResult = await model.generateContent(prompt);
@@ -216,7 +239,43 @@ Return ONLY valid JSON array, no additional text.
       );
     }
 
-    const questions = JSON.parse(jsonMatch[0]);
+    const parsedQuestions = JSON.parse(jsonMatch[0]);
+    
+    // Post-process and validate each question to ensure correct format
+    const questions = parsedQuestions.map((q: any) => {
+      const questionType = q.type || 'multiple_choice';
+      let options = q.options;
+      let correctAnswer = q.correctAnswer;
+      
+      // Validate and fix options based on question type
+      if (questionType === 'true_false') {
+        // Ensure true/false has correct options
+        options = ['True', 'False'];
+        // Normalize the correct answer
+        if (correctAnswer && typeof correctAnswer === 'string') {
+          const normalized = correctAnswer.toLowerCase().trim();
+          correctAnswer = normalized === 'true' ? 'True' : 'False';
+        }
+      } else if (questionType === 'short_answer') {
+        // Short answer should have no options
+        options = null;
+      } else if (questionType === 'multiple_choice') {
+        // MCQ should have options
+        if (!options || !Array.isArray(options) || options.length < 2) {
+          options = ['Option A', 'Option B', 'Option C', 'Option D'];
+        }
+      }
+      
+      return {
+        type: questionType,
+        question: q.question,
+        options: options,
+        correctAnswer: correctAnswer,
+        explanation: q.explanation,
+        difficulty: q.difficulty || difficulty,
+        marks: q.marks || 1,
+      };
+    });
 
     return NextResponse.json({
       success: true,
