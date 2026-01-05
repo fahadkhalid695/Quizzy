@@ -357,10 +357,10 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
             </h3>
             <div className="flex gap-2 flex-wrap">
               <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs font-medium rounded">
-                {currentQuestion.type.replace('_', ' ').toUpperCase()}
+                {(currentQuestion.type || 'multiple_choice').replace('_', ' ').toUpperCase()}
               </span>
               <span className="px-2 py-1 bg-amber-500/20 text-amber-300 text-xs font-medium rounded">
-                {currentQuestion.marks} mark{currentQuestion.marks > 1 ? 's' : ''}
+                {currentQuestion.marks || 1} mark{(currentQuestion.marks || 1) > 1 ? 's' : ''}
               </span>
             </div>
           </div>
@@ -369,7 +369,7 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
 
           {/* Answer Options - Mobile Optimized */}
           <div className="space-y-2 md:space-y-3">
-            {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
+            {(currentQuestion.type === 'multiple_choice' || (!currentQuestion.type && currentQuestion.options)) && currentQuestion.options && (
               <div className="space-y-2">
                 {currentQuestion.options.map((option: string, idx: number) => (
                   <label

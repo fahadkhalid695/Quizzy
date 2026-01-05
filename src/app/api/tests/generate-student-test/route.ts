@@ -81,10 +81,10 @@ export async function POST(request: NextRequest) {
       const questions = test.questions.map((q: any, idx: number) => ({
         id: idx,
         question: q.question,
-        type: q.type,
+        type: q.type || 'multiple_choice',
         options: q.options,
-        marks: q.marks,
-        difficulty: q.difficulty,
+        marks: q.marks || 1,
+        difficulty: q.difficulty || 'medium',
       }));
       
       return NextResponse.json({
@@ -109,10 +109,10 @@ export async function POST(request: NextRequest) {
           questions: existingAttempt.assignedQuestions.map((q: any, idx: number) => ({
             id: idx,
             question: q.question,
-            type: q.type,
+            type: q.type || 'multiple_choice',
             options: q.options,
-            marks: q.marks,
-            difficulty: q.difficulty,
+            marks: q.marks || 1,
+            difficulty: q.difficulty || 'medium',
           })),
           isDynamic: true,
           totalMarks: existingAttempt.assignedQuestions.reduce((sum: number, q: any) => sum + (q.marks || 1), 0),
@@ -145,10 +145,10 @@ export async function POST(request: NextRequest) {
       questions: studentQuestions.map((q: any, idx: number) => ({
         id: idx,
         question: q.question,
-        type: q.type,
+        type: q.type || 'multiple_choice',
         options: q.options,
-        marks: q.marks,
-        difficulty: q.difficulty,
+        marks: q.marks || 1,
+        difficulty: q.difficulty || 'medium',
       })),
       // Include full questions for storing in StudentTest (with answers)
       assignedQuestions: studentQuestions,
