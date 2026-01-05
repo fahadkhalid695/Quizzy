@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
 import { useNotify } from '@/components/common/Notification';
@@ -23,16 +23,9 @@ export default function StudentLeaderboardPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const notify = useNotify();
+  const hasFetched = useRef(false);
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
-    fetchLeaderboard();
-  }, [user]);
-
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     try {
       setLoading(true);
       // Don't require classId - the API will get all classes the student is enrolled in
@@ -44,7 +37,17 @@ export default function StudentLeaderboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    fetchLeaderboard();
+  }, [user, fetchLeaderboard, router]);
 
   if (!user) {
     return <div className="min-h-screen bg-slate-900" />;

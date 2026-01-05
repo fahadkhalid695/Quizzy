@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
@@ -19,51 +19,54 @@ export default function Results({ resultId, testId, onClose }: ResultsProps) {
   const [error, setError] = useState<string | null>(null);
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
   const notify = useNotify();
+  const hasFetched = useRef(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!resultId) {
-        setError('No result ID provided');
+  const fetchData = useCallback(async () => {
+    if (!resultId) {
+      setError('No result ID provided');
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const resultResponse = await api.get<{ result: any }>(`/api/results/${resultId}`);
+      
+      if (!resultResponse.result) {
+        setError('Result not found');
         setLoading(false);
         return;
       }
       
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const resultResponse = await api.get<{ result: any }>(`/api/results/${resultId}`);
-        
-        if (!resultResponse.result) {
-          setError('Result not found');
-          setLoading(false);
-          return;
+      setResult(resultResponse.result);
+      
+      // Test data might be included in the result response
+      if (resultResponse.result.test) {
+        setTest(resultResponse.result.test);
+      } else if (testId) {
+        try {
+          const testResponse = await api.get<{ test: any }>(`/api/tests/${testId}`);
+          setTest(testResponse.test);
+        } catch (testError) {
+          console.error('Failed to fetch test details:', testError);
         }
-        
-        setResult(resultResponse.result);
-        
-        // Test data might be included in the result response
-        if (resultResponse.result.test) {
-          setTest(resultResponse.result.test);
-        } else if (testId) {
-          try {
-            const testResponse = await api.get<{ test: any }>(`/api/tests/${testId}`);
-            setTest(testResponse.test);
-          } catch (testError) {
-            console.error('Failed to fetch test details:', testError);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch results:', err);
-        setError('Failed to load results');
-        notify.error('Failed to fetch results');
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('Failed to fetch results:', err);
+      setError('Failed to load results');
+      notify.error('Failed to fetch results');
+    } finally {
+      setLoading(false);
+    }
+  }, [resultId, testId]);
 
+  useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     fetchData();
-  }, [resultId, testId, notify]);
+  }, [fetchData]);
 
   if (loading) {
     return (

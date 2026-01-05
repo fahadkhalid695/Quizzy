@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
 import { useNotify } from '@/components/common/Notification';
@@ -25,16 +25,9 @@ export default function StudentResultsPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const notify = useNotify();
+  const hasFetched = useRef(false);
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-      return;
-    }
-    fetchResults();
-  }, [user]);
-
-  const fetchResults = async () => {
+  const fetchResults = useCallback(async () => {
     try {
       setLoading(true);
       const response = await api.get<{ results: TestResult[] }>('/api/results/list');
@@ -44,7 +37,17 @@ export default function StudentResultsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    fetchResults();
+  }, [user, fetchResults, router]);
 
   if (!user) {
     return <div className="min-h-screen bg-slate-900" />;

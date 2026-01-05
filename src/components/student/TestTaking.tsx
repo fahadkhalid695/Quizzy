@@ -38,6 +38,7 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
   const testRef = useRef<any>(null);
   const answersRef = useRef<Map<string, any>>(new Map());
   const classIdRef = useRef(propClassId);
+  const lastFetchedTestId = useRef<string | null>(null);
 
   // Keep refs in sync
   useEffect(() => {
@@ -108,10 +109,13 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
         setSubmitting(false);
       }
     }
-  }, [testId, notify, onSubmit]);
+  }, [testId, onSubmit]);
 
   // Fetch test data
   useEffect(() => {
+    if (lastFetchedTestId.current === testId) return;
+    lastFetchedTestId.current = testId;
+    
     let mounted = true;
     
     const fetchTest = async () => {
@@ -156,7 +160,7 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
     return () => {
       mounted = false;
     };
-  }, [testId, notify, propClassId]);
+  }, [testId, propClassId]);
 
   // Timer countdown
   useEffect(() => {
@@ -183,7 +187,7 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
       notify.warning('Time is up! Submitting your test...');
       doSubmit();
     }
-  }, [timeLeft, timerActive, doSubmit, notify]);
+  }, [timeLeft, timerActive, doSubmit]);
 
   // Tab visibility detection
   useEffect(() => {
@@ -204,7 +208,7 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [doSubmit, notify]);
+  }, [doSubmit]);
 
   const handleAnswerChange = (questionId: string, answer: any) => {
     setAnswers(prev => {

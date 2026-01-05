@@ -26,7 +26,7 @@ export default function Leaderboard({ classId }: LeaderboardProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const notify = useNotify();
-  const hasFetched = useRef(false);
+  const lastFetchedClassId = useRef<string | null>(null);
 
   const fetchLeaderboard = useCallback(async () => {
     try {
@@ -41,8 +41,8 @@ export default function Leaderboard({ classId }: LeaderboardProps) {
   }, [classId]);
 
   useEffect(() => {
-    if (hasFetched.current && classId === hasFetched.current) return;
-    hasFetched.current = classId as any;
+    if (lastFetchedClassId.current === classId) return;
+    lastFetchedClassId.current = classId;
     fetchLeaderboard();
   }, [classId, fetchLeaderboard]);
 
