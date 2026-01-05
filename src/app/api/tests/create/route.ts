@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     } = await request.json();
 
     // Validation
-    if (!title || !classId || !questions || questions.length === 0) {
+    if (!title || !classId || classId === 'undefined' || !questions || questions.length === 0) {
       return NextResponse.json(
-        { error: 'Title, class ID, and at least one question are required' },
+        { error: 'Title, valid class ID, and at least one question are required' },
         { status: 400 }
       );
     }

@@ -27,6 +27,10 @@ export async function GET(
     const format = request.nextUrl.searchParams.get('format') || 'csv';
     const testId = request.nextUrl.searchParams.get('testId');
 
+    if (!classId || classId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Class ID is required' }, { status: 400 });
+    }
+
     // Verify teacher owns this class
     const classDoc = await Class.findById(classId);
     if (!classDoc || classDoc.teacherId.toString() !== payload.userId) {

@@ -22,6 +22,10 @@ export async function GET(request: NextRequest, props: { params: Promise<{ class
 
     const { classId } = await props.params;
 
+    if (!classId || classId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Class ID is required' }, { status: 400 });
+    }
+
     // Verify teacher owns this class
     const classDoc = await Class.findById(classId);
     if (!classDoc || classDoc.teacherId.toString() !== payload.userId) {

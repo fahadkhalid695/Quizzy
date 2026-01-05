@@ -26,6 +26,10 @@ export async function GET(
     const format = request.nextUrl.searchParams.get('format') || 'csv';
     const includeAnswers = request.nextUrl.searchParams.get('includeAnswers') === 'true';
 
+    if (!testId || testId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Test ID is required' }, { status: 400 });
+    }
+
     // Get the test
     const test = await Test.findById(testId);
     if (!test) {

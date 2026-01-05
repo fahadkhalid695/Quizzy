@@ -20,6 +20,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ testI
     }
 
     const { testId } = await props.params;
+
+    if (!testId || testId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Test ID is required' }, { status: 400 });
+    }
+
     const test = await Test.findById(testId);
 
     if (!test) {
@@ -75,6 +80,11 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ testI
     }
 
     const { testId } = await props.params;
+
+    if (!testId || testId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Test ID is required' }, { status: 400 });
+    }
+
     const test = await Test.findById(testId);
 
     if (!test) {
@@ -121,6 +131,11 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ te
     }
 
     const { testId } = await props.params;
+
+    if (!testId || testId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Test ID is required' }, { status: 400 });
+    }
+
     const test = await Test.findById(testId);
 
     if (!test) {

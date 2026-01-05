@@ -59,6 +59,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Validate classId before querying
+    if (!classId || classId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Class ID is required' }, { status: 400 });
+    }
+
     // Get class name
     const classDoc = await Class.findById(classId).select('name');
     const className = classDoc?.name || 'Unknown Class';

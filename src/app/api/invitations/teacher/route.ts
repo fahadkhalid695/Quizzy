@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
 
     const { classId, studentEmail, message } = await request.json()
 
-    if (!classId || !studentEmail) {
-      return NextResponse.json({ error: 'Class ID and student email are required' }, { status: 400 })
+    if (!classId || classId === 'undefined' || !studentEmail) {
+      return NextResponse.json({ error: 'Valid Class ID and student email are required' }, { status: 400 })
     }
 
     // Get class details

@@ -20,6 +20,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ resul
     }
 
     const { resultId } = await props.params;
+
+    if (!resultId || resultId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Result ID is required' }, { status: 400 });
+    }
+
     const result = await TestResult.findById(resultId);
 
     if (!result) {

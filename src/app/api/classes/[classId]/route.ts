@@ -19,6 +19,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ class
     }
 
     const { classId } = await props.params;
+    
+    if (!classId || classId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Class ID is required' }, { status: 400 });
+    }
+
     const classDoc = await Class.findById(classId);
 
     if (!classDoc) {

@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
 
     const { testId } = await request.json();
 
-    if (!testId) {
-      return NextResponse.json({ error: 'Test ID is required' }, { status: 400 });
+    if (!testId || testId === 'undefined') {
+      return NextResponse.json({ error: 'Valid Test ID is required' }, { status: 400 });
     }
 
     // Find the test

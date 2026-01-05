@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const classId = searchParams.get('classId');
 
-    if (!classId) {
-      return NextResponse.json({ error: 'Class ID is required' }, { status: 400 });
+    if (!classId || classId === 'undefined' || classId === 'null') {
+      return NextResponse.json({ error: 'Valid Class ID is required' }, { status: 400 });
     }
 
     const classDoc = await Class.findById(classId);
@@ -80,9 +80,9 @@ export async function POST(request: NextRequest) {
 
     const { classId, studentEmail } = await request.json();
 
-    if (!classId || !studentEmail) {
+    if (!classId || classId === 'undefined' || !studentEmail) {
       return NextResponse.json(
-        { error: 'Class ID and student email are required' },
+        { error: 'Valid Class ID and student email are required' },
         { status: 400 }
       );
     }
@@ -178,9 +178,9 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    if (!classId || !studentId) {
+    if (!classId || classId === 'undefined' || !studentId || studentId === 'undefined') {
       return NextResponse.json(
-        { error: 'Class ID and student ID are required' },
+        { error: 'Valid Class ID and student ID are required' },
         { status: 400 }
       );
     }

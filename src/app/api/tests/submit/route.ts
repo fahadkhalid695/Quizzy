@@ -24,10 +24,10 @@ export async function POST(request: NextRequest) {
     
     console.log('Submit request:', { testId, classId, answersCount: answers?.length });
 
-    if (!testId || !classId || !answers) {
+    if (!testId || testId === 'undefined' || !classId || classId === 'undefined' || !answers) {
       console.log('Missing fields:', { hasTestId: !!testId, hasClassId: !!classId, hasAnswers: !!answers });
       return NextResponse.json(
-        { error: 'Test ID, class ID, and answers are required' },
+        { error: 'Valid Test ID, class ID, and answers are required' },
         { status: 400 }
       );
     }
