@@ -78,14 +78,20 @@ export async function POST(request: NextRequest) {
     // Check if test is dynamic
     if (!test.isDynamic || !test.dynamicSettings) {
       // Return regular questions for non-dynamic tests
-      const questions = test.questions.map((q: any, idx: number) => ({
-        id: idx,
-        question: q.question,
-        type: q.type || 'multiple_choice',
-        options: q.options,
-        marks: q.marks || 1,
-        difficulty: q.difficulty || 'medium',
-      }));
+      // Convert Mongoose documents to plain objects
+      const questions = test.questions.map((q: any, idx: number) => {
+        const plainQ = q.toObject ? q.toObject() : q;
+        return {
+          id: idx,
+          question: plainQ.question || '',
+          type: plainQ.type || 'multiple_choice',
+          options: plainQ.options || [],
+          marks: plainQ.marks || 1,
+          difficulty: plainQ.difficulty || 'medium',
+        };
+      });
+      
+      console.log('Non-dynamic test - first question:', JSON.stringify(questions[0], null, 2));
       
       return NextResponse.json({
         questions,
@@ -105,15 +111,21 @@ export async function POST(request: NextRequest) {
 
       if (existingAttempt && existingAttempt.assignedQuestions) {
         // Return the same questions from previous attempt
-        return NextResponse.json({
-          questions: existingAttempt.assignedQuestions.map((q: any, idx: number) => ({
+        // Convert to plain objects if needed
+        const questions = existingAttempt.assignedQuestions.map((q: any, idx: number) => {
+          const plainQ = q.toObject ? q.toObject() : q;
+          return {
             id: idx,
-            question: q.question,
-            type: q.type || 'multiple_choice',
-            options: q.options,
-            marks: q.marks || 1,
-            difficulty: q.difficulty || 'medium',
-          })),
+            question: plainQ.question || '',
+            type: plainQ.type || 'multiple_choice',
+            options: plainQ.options || [],
+            marks: plainQ.marks || 1,
+            difficulty: plainQ.difficulty || 'medium',
+          };
+        });
+        
+        return NextResponse.json({
+          questions,
           isDynamic: true,
           totalMarks: existingAttempt.assignedQuestions.reduce((sum: number, q: any) => sum + (q.marks || 1), 0),
           duration: test.duration,
@@ -123,7 +135,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new questions for this student
-    const questionPool = test.dynamicSettings.questionPool || test.questions;
+    // Convert Mongoose documents to plain objects to ensure all fields are accessible
+    const rawQuestionPool = test.dynamicSettings.questionPool || test.questions;
+    const questionPool = rawQuestionPool.map((q: any) => {
+      // Handle both Mongoose documents and plain objects
+      const plainQ = q.toObject ? q.toObject() : q;
+      return {
+        question: plainQ.question || '',
+        type: plainQ.type || 'multiple_choice',
+        options: plainQ.options || [],
+        correctAnswer: plainQ.correctAnswer || '',
+        explanation: plainQ.explanation || '',
+        difficulty: plainQ.difficulty || 'medium',
+        marks: plainQ.marks || 1,
+      };
+    });
+    
+    console.log('Question pool for dynamic test:', questionPool.length);
+    console.log('First question in pool:', JSON.stringify(questionPool[0], null, 2));
+    
     const questionsPerStudent = test.dynamicSettings.questionsPerStudent || questionPool.length;
     const shuffleQuestions = test.dynamicSettings.shuffleQuestions !== false;
     const shuffleOptions = test.dynamicSettings.shuffleOptions !== false;
@@ -141,12 +171,15 @@ export async function POST(request: NextRequest) {
     // Store the assigned questions for grading later
     // This will be done when the student actually starts the test
     
+    console.log('Dynamic test - returning questions:', studentQuestions.length);
+    console.log('First student question:', JSON.stringify(studentQuestions[0], null, 2));
+    
     return NextResponse.json({
       questions: studentQuestions.map((q: any, idx: number) => ({
         id: idx,
-        question: q.question,
+        question: q.question || '',
         type: q.type || 'multiple_choice',
-        options: q.options,
+        options: q.options || [],
         marks: q.marks || 1,
         difficulty: q.difficulty || 'medium',
       })),

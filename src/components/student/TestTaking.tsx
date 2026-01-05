@@ -157,6 +157,10 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
         
         // Ensure all questions have proper structure (normalize non-dynamic questions too)
         if (testData.questions && Array.isArray(testData.questions)) {
+          // Debug: Log raw questions before processing
+          console.log('Raw questions from API:', testData.questions.length);
+          console.log('First raw question:', JSON.stringify(testData.questions[0], null, 2));
+          
           testData.questions = testData.questions.map((q: any, idx: number) => ({
             _id: q._id?.toString() || q.id?.toString() || idx.toString(),
             question: q.question || '',
@@ -167,8 +171,8 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
             explanation: q.explanation || '',
           }));
           
-          // Debug: Log first question structure
-          console.log('Processed questions sample:', testData.questions[0]);
+          // Debug: Log first question structure after processing
+          console.log('Processed first question:', JSON.stringify(testData.questions[0], null, 2));
         }
         
         setTest(testData);

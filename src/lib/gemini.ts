@@ -392,10 +392,22 @@ Return only valid JSON.
     const researchMatch = researchText.match(/\{[\s\S]*\}/)
     if (researchMatch) {
       try {
-        research = JSON.parse(researchMatch[0])
+        const parsed = JSON.parse(researchMatch[0])
+        // Ensure summary is a string, not an object
+        research.summary = typeof parsed.summary === 'string' 
+          ? parsed.summary 
+          : (parsed.summary ? JSON.stringify(parsed.summary) : '');
+        research.keyFacts = Array.isArray(parsed.keyFacts) ? parsed.keyFacts : [];
+        research.misconceptions = Array.isArray(parsed.misconceptions) ? parsed.misconceptions : [];
+        research.examples = Array.isArray(parsed.examples) ? parsed.examples : [];
       } catch (e) {
-        research.summary = researchText
+        // If JSON parsing fails, extract just the text content without JSON formatting
+        const cleanText = researchText.replace(/[\{\}\[\]"]/g, '').replace(/\s+/g, ' ').trim();
+        research.summary = cleanText.substring(0, 500) + (cleanText.length > 500 ? '...' : '');
       }
+    } else {
+      // No JSON found, use the raw text
+      research.summary = researchText.substring(0, 500) + (researchText.length > 500 ? '...' : '');
     }
 
     // Step 2: Generate questions based on research
@@ -512,11 +524,15 @@ CRITICAL:
     const questionsResult = await model.generateContent(questionsPrompt)
     const questionsResponse = await questionsResult.response
     const questionsText = questionsResponse.text()
+    
+    console.log('Raw AI response text:', questionsText.substring(0, 500));
 
     let questions: IQuestion[] = []
     const questionsMatch = questionsText.match(/\[[\s\S]*\]/)
     if (questionsMatch) {
       const parsed = JSON.parse(questionsMatch[0])
+      
+      console.log('Parsed questions from AI:', JSON.stringify(parsed[0], null, 2));
       
       // Post-process and validate each question to ensure correct format
       // Also ENFORCE the selected question types
@@ -527,6 +543,12 @@ CRITICAL:
         
         // Get question text - AI might use different field names
         const questionText = q.question || q.text || q.questionText || q.content || '';
+        
+        console.log('Processing question:', { 
+          originalQuestion: q.question, 
+          fallbackText: q.text,
+          resultingQuestionText: questionText 
+        });
         
         // If the AI generated a type that wasn't requested, convert it to the first requested type
         if (!questionTypes.includes(questionType as any)) {

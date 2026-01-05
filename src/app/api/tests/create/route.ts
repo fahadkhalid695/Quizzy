@@ -59,9 +59,14 @@ export async function POST(request: NextRequest) {
 
     // Validate questions
     let calculatedTotalMarks = 0;
-    const validatedQuestions = questions.map((q: any) => {
+    console.log('Received questions to save:', questions.length);
+    console.log('First question received:', JSON.stringify(questions[0], null, 2));
+    
+    const validatedQuestions = questions.map((q: any, idx: number) => {
+      console.log(`Question ${idx} - question field:`, q.question);
+      
       if (!q.question || !q.type || !q.correctAnswer) {
-        throw new Error('Each question must have question text, type, and correct answer');
+        throw new Error(`Question ${idx + 1} must have question text, type, and correct answer. Got: question="${q.question}", type="${q.type}", correctAnswer="${q.correctAnswer}"`);
       }
       const marks = q.marks || 1;
       calculatedTotalMarks += marks;
@@ -85,8 +90,14 @@ export async function POST(request: NextRequest) {
         questions.length
       );
       
+      // Use the validated questions for the pool, ensuring question text is included
+      const questionPoolToSave = dynamicSettings.questionPool || validatedQuestions;
+      
+      console.log('Dynamic settings - questionPool count:', questionPoolToSave.length);
+      console.log('Dynamic settings - first question in pool:', JSON.stringify(questionPoolToSave[0], null, 2));
+      
       finalDynamicSettings = {
-        questionPool: dynamicSettings.questionPool || validatedQuestions,
+        questionPool: questionPoolToSave,
         questionsPerStudent,
         shuffleQuestions: dynamicSettings.shuffleQuestions !== false,
         shuffleOptions: dynamicSettings.shuffleOptions !== false,

@@ -39,6 +39,12 @@ export async function GET(request: NextRequest, props: { params: Promise<{ testI
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    // Debug: Log questions structure
+    console.log('Test questions count:', test.questions?.length);
+    if (test.questions && test.questions[0]) {
+      console.log('First question from DB:', JSON.stringify(test.questions[0], null, 2));
+    }
+
     return NextResponse.json({
       success: true,
       test: {
