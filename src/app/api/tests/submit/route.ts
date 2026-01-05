@@ -37,6 +37,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Test not found' }, { status: 404 });
     }
 
+    // Check if student has already submitted this test
+    const existingResult = await TestResult.findOne({
+      testId,
+      studentId: payload.userId,
+    });
+
+    if (existingResult) {
+      return NextResponse.json({
+        error: 'You have already submitted this test',
+        alreadySubmitted: true,
+        existingResultId: existingResult._id,
+      }, { status: 400 });
+    }
+
     // Grade the test
     let totalMarks = 0;
     let obtainedMarks = 0;

@@ -107,52 +107,82 @@ export async function detectCheating(
   timeSpent: number
 ): Promise<{ cheatingScore: number; details: string }> {
   try {
-    const model = genAI.getGenerativeModel({ model: MODEL_NAME })
+    // Basic time-based cheating detection (without AI)
+    const timeRatio = timeSpent / (testDuration * 60);
+    let cheatingScore = 0;
+    let details: string[] = [];
 
-    const answersText = studentAnswers
-      .map((a) => `Q: ${a.question}\nA: ${a.answer}`)
-      .join('\n\n')
+    // Too fast completion (less than 20% of allotted time)
+    if (timeRatio < 0.2 && studentAnswers.length > 3) {
+      cheatingScore += 30;
+      details.push(`Completed very quickly (${Math.round(timeRatio * 100)}% of time used)`);
+    }
 
-    const timeRatio = timeSpent / (testDuration * 60)
+    // Check for very long identical answers that might be copy-pasted
+    const longAnswers = studentAnswers.filter(a => a.answer && a.answer.length > 200);
+    if (longAnswers.length > 2) {
+      // Check if multiple long answers have similar patterns
+      const answerLengths = longAnswers.map(a => a.answer.length);
+      const avgLength = answerLengths.reduce((a, b) => a + b, 0) / answerLengths.length;
+      const variance = answerLengths.reduce((sum, len) => sum + Math.pow(len - avgLength, 2), 0) / answerLengths.length;
+      
+      // Low variance in long answer lengths could indicate copy-paste
+      if (variance < 100 && avgLength > 300) {
+        cheatingScore += 20;
+        details.push('Suspiciously uniform answer lengths detected');
+      }
+    }
 
-    const prompt = `
-Analyze the following student test responses for potential cheating indicators:
+    // Try AI-based detection if available
+    try {
+      const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-Answers:
+      const answersText = studentAnswers
+        .slice(0, 5) // Only analyze first 5 answers to save tokens
+        .map((a) => `Q: ${a.question}\nA: ${a.answer}`)
+        .join('\n\n');
+
+      const prompt = `
+Analyze these student test responses for potential academic dishonesty indicators (0-100 score):
+
 ${answersText}
 
 Test Duration: ${testDuration} minutes
-Time Spent: ${timeSpent} seconds
-Time Ratio: ${timeRatio.toFixed(2)}
+Time Spent: ${Math.round(timeSpent / 60)} minutes
 
 Check for:
-1. Unusually fast answers (copy-paste patterns)
-2. Inconsistent writing style between answers
-3. Suspiciously perfect answers for difficult questions
-4. Similar patterns suggesting AI generation
+1. Unusually sophisticated vocabulary for a student
+2. Perfect formatting suggesting copy-paste
+3. Inconsistent writing styles between answers
 
-Return JSON with:
-{
-  "cheatingScore": 0-100,
-  "details": "explanation of findings"
-}
+Return ONLY a JSON object: {"cheatingScore": number, "details": "brief explanation"}
+      `;
 
-Return only valid JSON.
-    `
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text_content = response.text();
 
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    const text_content = response.text()
-
-    const jsonMatch = text_content.match(/\{[\s\S]*\}/)
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0])
+      const jsonMatch = text_content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const aiResult = JSON.parse(jsonMatch[0]);
+        // Combine scores (weighted average)
+        cheatingScore = Math.round((cheatingScore + aiResult.cheatingScore) / 2);
+        if (aiResult.details && aiResult.details !== 'No suspicious patterns detected') {
+          details.push(aiResult.details);
+        }
+      }
+    } catch (aiError) {
+      // AI detection failed, use only basic detection
+      console.log('AI cheating detection unavailable, using basic detection');
     }
 
-    return { cheatingScore: 0, details: 'Could not analyze' }
+    return { 
+      cheatingScore: Math.min(cheatingScore, 100), 
+      details: details.length > 0 ? details.join('. ') : 'No suspicious patterns detected' 
+    };
   } catch (error) {
-    console.error('Error detecting cheating:', error)
-    return { cheatingScore: 0, details: 'Error in analysis' }
+    console.error('Error detecting cheating:', error);
+    return { cheatingScore: 0, details: 'Could not analyze' };
   }
 }
 

@@ -68,6 +68,11 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
   useEffect(() => {
     if (!timerStarted || timeLeft <= 0) return;
 
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -79,7 +84,10 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
     }, 1000);
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [timerStarted]);
 
@@ -139,7 +147,7 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
         return;
       }
 
-      const response = await api.post<{ result: { id: string } }>('/api/tests/submit', {
+      const response = await api.post<{ result: { id: string }, alreadySubmitted?: boolean, existingResultId?: string }>('/api/tests/submit', {
         testId,
         classId: submitClassId,
         answers: answersArray,
@@ -151,8 +159,17 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
       } else {
         onSubmit?.('');
       }
-    } catch (error) {
-      notify.error(error instanceof Error ? error.message : 'Failed to submit test');
+    } catch (error: any) {
+      // Check if error response indicates already submitted
+      if (error?.response?.alreadySubmitted || error?.message?.includes('already submitted')) {
+        notify.warning('You have already submitted this test.');
+        const existingId = error?.response?.existingResultId;
+        if (existingId) {
+          onSubmit?.(existingId);
+        }
+      } else {
+        notify.error(error instanceof Error ? error.message : 'Failed to submit test');
+      }
       setSubmitting(false);
     }
   };

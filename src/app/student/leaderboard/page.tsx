@@ -9,12 +9,12 @@ import BackButton from '@/components/common/BackButton';
 
 interface LeaderboardEntry {
   rank: number;
-  studentId: {
-    firstName: string;
-    lastName: string;
-  };
-  averageScore: number;
-  testsCompleted: number;
+  studentId: string;
+  firstName: string;
+  lastName: string;
+  averagePercentage: number;
+  totalTests: number;
+  badge?: string;
 }
 
 export default function StudentLeaderboardPage() {
@@ -35,9 +35,11 @@ export default function StudentLeaderboardPage() {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const response = await api.get<{ leaderboard: LeaderboardEntry[] }>('/api/leaderboard');
+      // Don't require classId - the API will get all classes the student is enrolled in
+      const response = await api.get<{ leaderboard: LeaderboardEntry[], message?: string }>('/api/leaderboard');
       setLeaderboard(response.leaderboard || []);
     } catch (error) {
+      console.error('Leaderboard error:', error);
       notify.error('Failed to load leaderboard');
     } finally {
       setLoading(false);
@@ -93,36 +95,36 @@ export default function StudentLeaderboardPage() {
                 <div className="bg-gradient-to-b from-gray-400/20 to-gray-500/10 border border-gray-400/30 rounded-2xl p-6 text-center mt-8">
                   <span className="text-5xl">🥈</span>
                   <h3 className="text-lg font-bold text-white mt-2">
-                    {leaderboard[1]?.studentId?.firstName} {leaderboard[1]?.studentId?.lastName?.charAt(0)}.
+                    {leaderboard[1]?.firstName} {leaderboard[1]?.lastName?.charAt(0)}.
                   </h3>
                   <p className="text-2xl font-bold bg-gradient-to-r from-gray-300 to-gray-400 bg-clip-text text-transparent">
-                    {leaderboard[1]?.averageScore?.toFixed(1)}%
+                    {leaderboard[1]?.averagePercentage?.toFixed(1)}%
                   </p>
-                  <p className="text-sm text-gray-400">{leaderboard[1]?.testsCompleted} tests</p>
+                  <p className="text-sm text-gray-400">{leaderboard[1]?.totalTests} tests</p>
                 </div>
                 
                 {/* 1st Place */}
                 <div className="bg-gradient-to-b from-yellow-500/20 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6 text-center">
                   <span className="text-6xl">🥇</span>
                   <h3 className="text-xl font-bold text-white mt-2">
-                    {leaderboard[0]?.studentId?.firstName} {leaderboard[0]?.studentId?.lastName?.charAt(0)}.
+                    {leaderboard[0]?.firstName} {leaderboard[0]?.lastName?.charAt(0)}.
                   </h3>
                   <p className="text-3xl font-bold bg-gradient-to-r from-yellow-300 to-amber-400 bg-clip-text text-transparent">
-                    {leaderboard[0]?.averageScore?.toFixed(1)}%
+                    {leaderboard[0]?.averagePercentage?.toFixed(1)}%
                   </p>
-                  <p className="text-sm text-gray-400">{leaderboard[0]?.testsCompleted} tests</p>
+                  <p className="text-sm text-gray-400">{leaderboard[0]?.totalTests} tests</p>
                 </div>
                 
                 {/* 3rd Place */}
                 <div className="bg-gradient-to-b from-orange-500/20 to-amber-600/10 border border-orange-500/30 rounded-2xl p-6 text-center mt-8">
                   <span className="text-5xl">🥉</span>
                   <h3 className="text-lg font-bold text-white mt-2">
-                    {leaderboard[2]?.studentId?.firstName} {leaderboard[2]?.studentId?.lastName?.charAt(0)}.
+                    {leaderboard[2]?.firstName} {leaderboard[2]?.lastName?.charAt(0)}.
                   </h3>
                   <p className="text-2xl font-bold bg-gradient-to-r from-orange-300 to-amber-400 bg-clip-text text-transparent">
-                    {leaderboard[2]?.averageScore?.toFixed(1)}%
+                    {leaderboard[2]?.averagePercentage?.toFixed(1)}%
                   </p>
-                  <p className="text-sm text-gray-400">{leaderboard[2]?.testsCompleted} tests</p>
+                  <p className="text-sm text-gray-400">{leaderboard[2]?.totalTests} tests</p>
                 </div>
               </div>
             )}
@@ -142,14 +144,14 @@ export default function StudentLeaderboardPage() {
                       <span className="text-2xl w-12 text-center">{getRankIcon(entry.rank)}</span>
                       <div>
                         <h4 className="font-bold text-white">
-                          {entry.studentId?.firstName} {entry.studentId?.lastName}
+                          {entry.firstName} {entry.lastName}
                         </h4>
-                        <p className="text-sm text-gray-400">{entry.testsCompleted} tests completed</p>
+                        <p className="text-sm text-gray-400">{entry.totalTests} tests completed</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                        {entry.averageScore?.toFixed(1)}%
+                        {entry.averagePercentage?.toFixed(1)}%
                       </p>
                     </div>
                   </div>

@@ -16,20 +16,46 @@ export default function Results({ resultId, testId, onClose }: ResultsProps) {
   const [result, setResult] = useState<any>(null);
   const [test, setTest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
   const notify = useNotify();
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!resultId) {
+        setError('No result ID provided');
+        setLoading(false);
+        return;
+      }
+      
       try {
+        setLoading(true);
+        setError(null);
+        
         const resultResponse = await api.get<{ result: any }>(`/api/results/${resultId}`);
-        setResult(resultResponse.result);
-
-        if (testId) {
-          const testResponse = await api.get<{ test: any }>(`/api/tests/${testId}`);
-          setTest(testResponse.test);
+        
+        if (!resultResponse.result) {
+          setError('Result not found');
+          setLoading(false);
+          return;
         }
-      } catch (error) {
+        
+        setResult(resultResponse.result);
+        
+        // Test data might be included in the result response
+        if (resultResponse.result.test) {
+          setTest(resultResponse.result.test);
+        } else if (testId) {
+          try {
+            const testResponse = await api.get<{ test: any }>(`/api/tests/${testId}`);
+            setTest(testResponse.test);
+          } catch (testError) {
+            console.error('Failed to fetch test details:', testError);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch results:', err);
+        setError('Failed to load results');
         notify.error('Failed to fetch results');
       } finally {
         setLoading(false);
@@ -40,14 +66,33 @@ export default function Results({ resultId, testId, onClose }: ResultsProps) {
   }, [resultId, testId, notify]);
 
   if (loading) {
-    return <div className="text-center py-12">Loading results...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/70 animate-pulse">Loading results...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!result) {
-    return <div className="text-center py-12">Results not found</div>;
+  if (error || !result) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+        <div className="text-center bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8">
+          <div className="text-6xl mb-4">❌</div>
+          <h2 className="text-xl font-bold text-white mb-2">{error || 'Results not found'}</h2>
+          {onClose && (
+            <Button variant="primary" onClick={onClose} className="mt-4">
+              Back to Dashboard
+            </Button>
+          )}
+        </div>
+      </div>
+    );
   }
 
-  const percentage = result.percentage;
+  const percentage = result.percentage || 0;
   const resultColor =
     percentage >= 80 ? 'green' : percentage >= 60 ? 'blue' : percentage >= 40 ? 'amber' : 'red';
   const resultEmoji = percentage >= 80 ? '🎉' : percentage >= 60 ? '👍' : '📚';

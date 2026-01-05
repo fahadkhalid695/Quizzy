@@ -22,13 +22,35 @@ export async function GET(request: NextRequest) {
     }
 
     const classId = request.nextUrl.searchParams.get('classId');
-
-    if (!classId) {
-      return NextResponse.json({ error: 'Class ID is required' }, { status: 400 });
+    
+    let classIds: string[] = [];
+    
+    if (classId) {
+      classIds = [classId];
+    } else {
+      // If no classId provided, get all classes the student is enrolled in
+      const Class = (await import('@/models/Class')).default;
+      const enrolledClasses = await Class.find({
+        $or: [
+          { students: payload.userId },
+          { students: payload.userId.toString() }
+        ]
+      }).select('_id');
+      classIds = enrolledClasses.map((c: any) => c._id.toString());
+      
+      if (classIds.length === 0) {
+        return NextResponse.json({
+          success: true,
+          leaderboard: [],
+          totalStudents: 0,
+          totalResults: 0,
+          message: 'You are not enrolled in any classes yet'
+        });
+      }
     }
 
-    // Get all results for the class (without populate)
-    const results = await TestResult.find({ classId })
+    // Get all results for the classes
+    const results = await TestResult.find({ classId: { $in: classIds } })
       .sort({ percentage: -1, createdAt: -1 });
 
     // Get all student IDs and test IDs from results
