@@ -141,9 +141,9 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
             
             // Replace questions with the dynamic ones
             testData.questions = dynamicResponse.questions.map((q: any, idx: number) => ({
-              _id: q.id?.toString() || idx.toString(),
+              _id: q.id?.toString() || q._id?.toString() || idx.toString(),
               question: q.question,
-              type: q.type,
+              type: q.type || 'multiple_choice',
               options: q.options,
               marks: q.marks || 1,
               difficulty: q.difficulty || 'medium',
@@ -153,6 +153,22 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
             console.error('Failed to get dynamic questions:', dynamicError);
             // Fall back to regular questions if dynamic generation fails
           }
+        }
+        
+        // Ensure all questions have proper structure (normalize non-dynamic questions too)
+        if (testData.questions && Array.isArray(testData.questions)) {
+          testData.questions = testData.questions.map((q: any, idx: number) => ({
+            _id: q._id?.toString() || q.id?.toString() || idx.toString(),
+            question: q.question || '',
+            type: q.type || 'multiple_choice',
+            options: q.options || [],
+            marks: q.marks || 1,
+            difficulty: q.difficulty || 'medium',
+            explanation: q.explanation || '',
+          }));
+          
+          // Debug: Log first question structure
+          console.log('Processed questions sample:', testData.questions[0]);
         }
         
         setTest(testData);
@@ -365,7 +381,9 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
             </div>
           </div>
           
-          <p className="text-base md:text-lg text-white mb-4 md:mb-6">{currentQuestion.question}</p>
+          <p className="text-lg md:text-xl text-white mb-4 md:mb-6 font-medium">
+            {currentQuestion.question || <span className="text-red-400 italic">Question text not available</span>}
+          </p>
 
           {/* Answer Options - Mobile Optimized */}
           <div className="space-y-2 md:space-y-3">
