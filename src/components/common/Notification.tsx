@@ -68,7 +68,7 @@ function Notification({ notification, onClose }: NotificationProps) {
 export function useNotify() {
   const addNotification = useNotificationStore((state) => state.addNotification)
 
-  return {
+  return React.useMemo(() => ({
     success: (message: string) =>
       addNotification({ type: 'success', message }),
     error: (message: string) =>
@@ -77,5 +77,5 @@ export function useNotify() {
       addNotification({ type: 'warning', message }),
     info: (message: string) =>
       addNotification({ type: 'info', message }),
-  }
+  }), [addNotification])
 }

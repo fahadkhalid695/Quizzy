@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Card from '@/components/ui/Card';
@@ -26,22 +26,25 @@ export default function Leaderboard({ classId }: LeaderboardProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const notify = useNotify();
+  const hasFetched = useRef(false);
+
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get<{ leaderboard: any[] }>(`/api/leaderboard?classId=${classId}`);
+      setLeaderboard(response.leaderboard || []);
+    } catch (error) {
+      notify.error('Failed to fetch leaderboard');
+    } finally {
+      setLoading(false);
+    }
+  }, [classId]);
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get<{ leaderboard: any[] }>(`/api/leaderboard?classId=${classId}`);
-        setLeaderboard(response.leaderboard || []);
-      } catch (error) {
-        notify.error('Failed to fetch leaderboard');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+    if (hasFetched.current && classId === hasFetched.current) return;
+    hasFetched.current = classId as any;
     fetchLeaderboard();
-  }, [classId, notify]);
+  }, [classId, fetchLeaderboard]);
 
   if (loading) {
     return <div className="text-center py-8 text-gray-400">Loading leaderboard...</div>;
