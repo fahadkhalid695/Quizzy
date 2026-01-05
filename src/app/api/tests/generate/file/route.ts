@@ -113,30 +113,17 @@ export async function POST(request: NextRequest) {
       const response = await result.response;
       extractedContent = response.text();
     }
-    // For PowerPoint
+    // PowerPoint files are not supported by Gemini API
     else if (
       fileType.includes('presentation') ||
       fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
       fileName.endsWith('.pptx') ||
       fileName.endsWith('.ppt')
     ) {
-      const pptBuffer = await file.arrayBuffer();
-      const base64Ppt = Buffer.from(pptBuffer).toString('base64');
-      
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-      
-      const result = await model.generateContent([
-        {
-          inlineData: {
-            mimeType: fileType || 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            data: base64Ppt,
-          },
-        },
-        'Extract ALL text content from this PowerPoint presentation. Include slide titles, bullet points, notes, and any text in diagrams. List content slide by slide. Return the complete extracted content.',
-      ]);
-      
-      const response = await result.response;
-      extractedContent = response.text();
+      return NextResponse.json(
+        { error: 'PowerPoint files are not supported. Please convert to PDF or copy the text content and use "AI from Text" option instead.' },
+        { status: 400 }
+      );
     }
     else {
       // Try to read as text

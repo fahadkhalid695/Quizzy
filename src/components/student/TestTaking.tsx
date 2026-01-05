@@ -120,11 +120,41 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
     
     const fetchTest = async () => {
       try {
-        const response = await api.get<{ test: any }>(`/api/tests/${testId}`);
+        // First get basic test info
+        const testResponse = await api.get<{ test: any }>(`/api/tests/${testId}`);
         
         if (!mounted) return;
         
-        const testData = response.test;
+        const testData = testResponse.test;
+        
+        // Check if test is dynamic - if so, get personalized questions
+        if (testData.isDynamic) {
+          try {
+            const dynamicResponse = await api.post<{ 
+              questions: any[]; 
+              isDynamic: boolean; 
+              totalMarks: number;
+              duration: number;
+            }>('/api/tests/generate-student-test', { testId });
+            
+            if (!mounted) return;
+            
+            // Replace questions with the dynamic ones
+            testData.questions = dynamicResponse.questions.map((q: any, idx: number) => ({
+              _id: q.id?.toString() || idx.toString(),
+              question: q.question,
+              type: q.type,
+              options: q.options,
+              marks: q.marks || 1,
+              difficulty: q.difficulty || 'medium',
+            }));
+            testData.totalMarks = dynamicResponse.totalMarks;
+          } catch (dynamicError) {
+            console.error('Failed to get dynamic questions:', dynamicError);
+            // Fall back to regular questions if dynamic generation fails
+          }
+        }
+        
         setTest(testData);
         testRef.current = testData;
         

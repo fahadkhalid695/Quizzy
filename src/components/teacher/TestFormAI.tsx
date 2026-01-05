@@ -89,11 +89,20 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
       'image/png', 'image/jpeg', 'image/jpg', 'image/webp',
       'text/plain',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     ];
     
+    // Check for PowerPoint files specifically to show helpful message
+    if (
+      file.type === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      file.name.endsWith('.pptx') ||
+      file.name.endsWith('.ppt')
+    ) {
+      notify.error('PowerPoint files are not supported. Please convert to PDF or use "AI from Text" option.');
+      return;
+    }
+    
     if (!allowedTypes.includes(file.type) && !file.name.endsWith('.txt')) {
-      notify.error('Unsupported file type. Please upload PDF, images, Word, PowerPoint, or text files.');
+      notify.error('Unsupported file type. Please upload PDF, images, Word, or text files.');
       return;
     }
     
@@ -417,7 +426,7 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
         >
           <div className="text-4xl mb-4">📄</div>
           <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition">AI from Document</h3>
-          <p className="text-gray-400 text-sm">Upload PDF, images, Word, or PowerPoint files</p>
+          <p className="text-gray-400 text-sm">Upload PDF, images, Word, or text files</p>
           <span className="inline-block mt-2 px-2 py-1 bg-blue-500/30 text-blue-300 text-xs rounded-full">AI Powered</span>
         </button>
         
@@ -483,7 +492,7 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
                     ref={fileInputRef}
                     type="file"
                     onChange={handleFileSelect}
-                    accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.docx,.pptx"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,.txt,.docx"
                     className="hidden"
                   />
                   
@@ -508,7 +517,7 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
                       <div className="text-4xl mb-4">📁</div>
                       <p className="text-white font-medium">Click to upload or drag and drop</p>
                       <p className="text-gray-400 text-sm mt-2">
-                        PDF, Images (PNG, JPG, WebP), Word, PowerPoint, or Text files
+                        PDF, Images (PNG, JPG, WebP), Word, or Text files
                       </p>
                       <p className="text-gray-500 text-xs mt-1">Max size: 10MB</p>
                     </>
@@ -520,7 +529,7 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
                 <ul className="text-blue-200/70 space-y-1">
                   <li>• <strong>PDF:</strong> Textbooks, articles, lecture notes</li>
                   <li>• <strong>Images:</strong> Screenshots, diagrams with text, handwritten notes (OCR)</li>
-                  <li>• <strong>Word/PowerPoint:</strong> Lecture slides, study materials</li>
+                  <li>• <strong>Word:</strong> Lecture notes, study materials</li>
                 </ul>
               </div>
             </>

@@ -69,29 +69,43 @@ export async function POST(request: NextRequest) {
       let isCorrect = false;
       let marksObtained = 0;
 
+      // Get and validate student answer - empty answers get 0 marks
+      const studentAnswer = (answer.answer?.toString() || '').trim();
+
       // Grade based on question type
       if (question.type === 'multiple_choice' || question.type === 'true_false') {
-        isCorrect = answer.answer === question.correctAnswer;
+        // Empty or missing answers are incorrect
+        isCorrect = studentAnswer !== '' && studentAnswer === question.correctAnswer;
         marksObtained = isCorrect ? marks : 0;
       } else if (question.type === 'short_answer') {
-        // Use Gemini for grading
-        try {
-          const gradeResult = await gradeShortAnswer(
-            question.question,
-            question.correctAnswer,
-            answer.answer
-          );
-          marksObtained = Math.round((gradeResult.score / 100) * marks);
-          isCorrect = gradeResult.score >= 70;
-        } catch {
-          // Fallback: check if answer contains key terms
-          marksObtained = answer.answer.toLowerCase().includes(question.correctAnswer.toLowerCase())
-            ? marks
-            : 0;
-          isCorrect = marksObtained > 0;
+        // No marks for empty answers
+        if (!studentAnswer) {
+          isCorrect = false;
+          marksObtained = 0;
+        } else {
+          // Use Gemini for grading
+          try {
+            const gradeResult = await gradeShortAnswer(
+              question.question,
+              studentAnswer,           // Student answer (second param)
+              question.correctAnswer   // Correct answer (third param)
+            );
+            marksObtained = Math.round((gradeResult.score / 100) * marks);
+            isCorrect = gradeResult.score >= 70;
+          } catch {
+            // Fallback: check if answer contains key terms
+            const correctAnswerLower = (question.correctAnswer || '').toLowerCase().trim();
+            if (correctAnswerLower && studentAnswer.toLowerCase().includes(correctAnswerLower)) {
+              marksObtained = marks;
+              isCorrect = true;
+            } else {
+              marksObtained = 0;
+              isCorrect = false;
+            }
+          }
         }
       } else if (question.type === 'essay') {
-        // Essays require teacher grading
+        // Essays require teacher grading - no marks for empty
         marksObtained = 0;
         isCorrect = false;
       }
