@@ -185,10 +185,14 @@ export default function ClassDetailPage() {
     }
   };
 
-  const pendingInvitations = invitations.filter((i) => i.status === 'pending');
+  const pendingInvitations = invitations.filter((inv) => inv.status === 'pending');
 
   if (!classId) {
-    return <div className="min-h-screen bg-slate-900 text-center py-12 text-gray-400">Class not found</div>;
+    return (
+      <div className="min-h-screen bg-slate-900 text-center py-12 text-gray-400">
+        Class not found
+      </div>
+    );
   }
 
   return (
@@ -477,7 +481,8 @@ export default function ClassDetailPage() {
                       ))}
                     </tbody>
                   </table>
-              </div>
+                </div>
+              </>
             )}
           </div>
         )}
