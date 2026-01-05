@@ -57,12 +57,35 @@ export async function POST(request: NextRequest) {
     const gradedAnswers = [];
     const answerTexts: string[] = [];
 
+    // For grading, we need to handle both:
+    // 1. Non-dynamic tests: questionId is MongoDB ObjectId
+    // 2. Dynamic tests: questionId is index (0, 1, 2, etc.)
+    
     for (const answer of answers) {
-      const question = test.questions.find(
+      // Try to find question by _id first (for non-dynamic tests)
+      let question = test.questions.find(
         (q: any) => q._id.toString() === answer.questionId
       );
+      
+      // If not found, try by index (for dynamic tests)
+      if (!question) {
+        const idx = parseInt(answer.questionId, 10);
+        if (!isNaN(idx) && idx >= 0 && idx < test.questions.length) {
+          question = test.questions[idx];
+        }
+      }
 
-      if (!question) continue;
+      if (!question) {
+        console.log('Question not found for questionId:', answer.questionId);
+        continue;
+      }
+      
+      console.log('Grading question:', { 
+        questionId: answer.questionId, 
+        type: question.type,
+        studentAnswer: answer.answer,
+        correctAnswer: question.correctAnswer 
+      });
 
       const marks = question.marks || 1;
       totalMarks += marks;
@@ -71,13 +94,39 @@ export async function POST(request: NextRequest) {
 
       // Get and validate student answer - empty answers get 0 marks
       const studentAnswer = (answer.answer?.toString() || '').trim();
+      const correctAnswer = (question.correctAnswer?.toString() || '').trim();
+      
+      // Normalize question type - default to multiple_choice if missing
+      const questionType = (question.type || 'multiple_choice').toLowerCase();
 
       // Grade based on question type
-      if (question.type === 'multiple_choice' || question.type === 'true_false') {
-        // Empty or missing answers are incorrect
-        isCorrect = studentAnswer !== '' && studentAnswer === question.correctAnswer;
+      if (questionType === 'multiple_choice') {
+        // For MCQ: exact match (case-insensitive for robustness)
+        if (studentAnswer !== '') {
+          // Try exact match first
+          isCorrect = studentAnswer === correctAnswer;
+          
+          // If not, try case-insensitive match
+          if (!isCorrect) {
+            isCorrect = studentAnswer.toLowerCase() === correctAnswer.toLowerCase();
+          }
+        }
         marksObtained = isCorrect ? marks : 0;
-      } else if (question.type === 'short_answer') {
+        console.log('MCQ grading:', { studentAnswer, correctAnswer, isCorrect, marksObtained });
+        
+      } else if (questionType === 'true_false') {
+        // For True/False: normalize and compare
+        if (studentAnswer !== '') {
+          const normalizedStudent = studentAnswer.toLowerCase();
+          const normalizedCorrect = correctAnswer.toLowerCase();
+          isCorrect = normalizedStudent === normalizedCorrect ||
+                      (normalizedStudent === 'true' && normalizedCorrect === 'true') ||
+                      (normalizedStudent === 'false' && normalizedCorrect === 'false');
+        }
+        marksObtained = isCorrect ? marks : 0;
+        console.log('True/False grading:', { studentAnswer, correctAnswer, isCorrect, marksObtained });
+        
+      } else if (questionType === 'short_answer') {
         // No marks for empty answers
         if (!studentAnswer) {
           isCorrect = false;
@@ -104,10 +153,17 @@ export async function POST(request: NextRequest) {
             }
           }
         }
-      } else if (question.type === 'essay') {
+      } else if (questionType === 'essay') {
         // Essays require teacher grading - no marks for empty
         marksObtained = 0;
         isCorrect = false;
+      } else {
+        // Default case: treat as MCQ with case-insensitive matching
+        if (studentAnswer !== '' && correctAnswer !== '') {
+          isCorrect = studentAnswer.toLowerCase() === correctAnswer.toLowerCase();
+          marksObtained = isCorrect ? marks : 0;
+        }
+        console.log('Default grading (unknown type):', { questionType, studentAnswer, correctAnswer, isCorrect, marksObtained });
       }
 
       obtainedMarks += marksObtained;
@@ -127,9 +183,16 @@ export async function POST(request: NextRequest) {
     try {
       // Prepare answers for cheating detection
       const answersForCheating = answers.map((answer: any) => {
-        const question = test.questions.find(
+        // Find question by _id or by index
+        let question = test.questions.find(
           (q: any) => q._id.toString() === answer.questionId
         );
+        if (!question) {
+          const idx = parseInt(answer.questionId, 10);
+          if (!isNaN(idx) && idx >= 0 && idx < test.questions.length) {
+            question = test.questions[idx];
+          }
+        }
         return {
           question: question?.question || '',
           answer: answer.answer || '',
