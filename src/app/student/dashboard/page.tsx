@@ -1,80 +1,80 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuthStore, useHasHydrated } from '@/lib/store'
-import Button from '@/components/ui/Button'
-import Link from 'next/link'
-import ClassInvitations from '@/components/student/ClassInvitations'
-import { api } from '@/lib/api-client'
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore, useHasHydrated } from '@/lib/store';
+import Button from '@/components/ui/Button';
+import Link from 'next/link';
+import ClassInvitations from '@/components/student/ClassInvitations';
+import { api } from '@/lib/api-client';
 
 interface DashboardStats {
-  testsTaken: number
-  averageScore: number
-  bestScore: number
-  totalTests: number
+  testsTaken: number;
+  averageScore: number;
+  bestScore: number;
+  totalTests: number;
 }
 
 interface AvailableTest {
-  id: string
-  title: string
-  duration: number
-  difficulty: string
-  totalMarks: number
-  questionCount: number
-  className?: string
+  id: string;
+  title: string;
+  duration: number;
+  difficulty: string;
+  totalMarks: number;
+  questionCount: number;
+  className?: string;
 }
 
 interface RecentResult {
-  id: string
-  testTitle: string
-  score: number
-  percentage: number
-  submittedAt: string
+  id: string;
+  testTitle: string;
+  score: number;
+  percentage: number;
+  submittedAt: string;
 }
 
 export default function StudentDashboard() {
-  const router = useRouter()
-  const hasHydrated = useHasHydrated()
-  const user = useAuthStore((state) => state.user)
-  const logout = useAuthStore((state) => state.logout)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [pendingInvitations, setPendingInvitations] = useState(0)
-  const [activeTab, setActiveTab] = useState<'overview' | 'invitations'>('overview')
-  const [loading, setLoading] = useState(true)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const router = useRouter();
+  const hasHydrated = useHasHydrated();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [pendingInvitations, setPendingInvitations] = useState(0);
+  const [activeTab, setActiveTab] = useState<'overview' | 'invitations'>('overview');
+  const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [stats, setStats] = useState<DashboardStats>({
     testsTaken: 0,
     averageScore: 0,
     bestScore: 0,
     totalTests: 0
-  })
-  const [availableTests, setAvailableTests] = useState<AvailableTest[]>([])
-  const [recentResults, setRecentResults] = useState<RecentResult[]>([])
+  });
+  const [availableTests, setAvailableTests] = useState<AvailableTest[]>([]);
+  const [recentResults, setRecentResults] = useState<RecentResult[]>([]);
 
   // Fetch all dashboard data
   useEffect(() => {
     if (hasHydrated && user) {
-      fetchDashboardData()
-      fetchInvitationCount()
+      fetchDashboardData();
+      fetchInvitationCount();
     }
-  }, [hasHydrated, user])
+  }, [hasHydrated, user]);
 
   const fetchDashboardData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       
       // Fetch available tests and results in parallel
       const [testsResponse, resultsResponse] = await Promise.all([
         api.get<{ tests: any[] }>('/api/tests/available'),
         api.get<{ results: any[] }>('/api/results/list')
-      ])
+      ]);
 
-      const tests = testsResponse.tests || []
-      const results = resultsResponse.results || []
+      const tests = testsResponse.tests || [];
+      const results = resultsResponse.results || [];
 
       // Process available tests - filter out already submitted tests
-      const unsubmittedTests = tests.filter((test: any) => !test.isSubmitted)
+      const unsubmittedTests = tests.filter((test: any) => !test.isSubmitted);
       setAvailableTests(unsubmittedTests.slice(0, 3).map((test: any) => ({
         id: test.id,
         title: test.title,
@@ -83,20 +83,20 @@ export default function StudentDashboard() {
         totalMarks: test.totalMarks,
         questionCount: test.questionCount || test.questions?.length || 0,
         className: test.classId?.name || test.className
-      })))
+      })));
 
       // Process results for stats
-      const testsTaken = results.length
-      const totalScore = results.reduce((sum: number, r: any) => sum + (r.percentage || 0), 0)
-      const averageScore = testsTaken > 0 ? Math.round(totalScore / testsTaken) : 0
-      const bestScore = testsTaken > 0 ? Math.max(...results.map((r: any) => r.percentage || 0)) : 0
+      const testsTaken = results.length;
+      const totalScore = results.reduce((sum: number, r: any) => sum + (r.percentage || 0), 0);
+      const averageScore = testsTaken > 0 ? Math.round(totalScore / testsTaken) : 0;
+      const bestScore = testsTaken > 0 ? Math.max(...results.map((r: any) => r.percentage || 0)) : 0;
 
       setStats({
         testsTaken,
         averageScore,
         bestScore,
         totalTests: unsubmittedTests.length  // Show only unsubmitted tests count
-      })
+      });
 
       // Recent results
       setRecentResults(results.slice(0, 3).map((result: any) => ({
@@ -105,30 +105,30 @@ export default function StudentDashboard() {
         score: result.score || 0,
         percentage: result.percentage || 0,
         submittedAt: result.submittedAt
-      })))
+      })));
 
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error)
+      console.error('Failed to fetch dashboard data:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchInvitationCount = async () => {
     try {
-      const response = await api.get<{ invitations: any[] }>('/api/invitations/student?status=pending')
-      setPendingInvitations(response.invitations?.length || 0)
+      const response = await api.get<{ invitations: any[] }>('/api/invitations/student?status=pending');
+      setPendingInvitations(response.invitations?.length || 0);
     } catch (error) {
-      console.error('Failed to fetch invitation count:', error)
+      console.error('Failed to fetch invitation count:', error);
     }
-  }
+  };
 
   // Redirect if not authenticated after hydration
   useEffect(() => {
     if (hasHydrated && !user) {
-      router.push('/auth/login')
+      router.push('/auth/login');
     }
-  }, [hasHydrated, user, router])
+  }, [hasHydrated, user, router]);
 
   // Show loading while hydrating
   if (!hasHydrated) {
@@ -139,7 +139,7 @@ export default function StudentDashboard() {
           <p className="text-white/70 animate-pulse">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // If hydrated but no user, show redirecting message
@@ -151,13 +151,13 @@ export default function StudentDashboard() {
           <p className="text-white/70 animate-pulse">Redirecting to login...</p>
         </div>
       </div>
-    )
+    );
   }
 
   const handleLogout = () => {
-    logout()
-    router.push('/')
-  }
+    logout();
+    router.push('/');
+  };
 
   const navItems = [
     { icon: '🏠', label: 'Dashboard', href: '/student/dashboard', active: true },

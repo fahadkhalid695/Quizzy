@@ -189,7 +189,7 @@ export default function ClassDetailPage() {
     return <div className="min-h-screen bg-slate-900 text-center py-12 text-gray-400">Class not found</div>;
   }
 
-  const pendingInvitations = invitations.filter((i) => i.status === 'pending');
+  const pendingInvitations = invitations.filter(function(i) { return i.status === 'pending'; });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
