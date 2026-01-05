@@ -167,6 +167,14 @@ export async function POST(request: NextRequest) {
       return type;
     }).join(', ');
 
+    // Calculate distribution of question types
+    const questionsPerType = Math.floor(numQuestions / questionTypes.length);
+    const remainder = numQuestions % questionTypes.length;
+    const typeDistribution = questionTypes.map((type: string, index: number) => {
+      const count = questionsPerType + (index < remainder ? 1 : 0);
+      return `${count} ${type.replace('_', ' ')} question(s)`;
+    }).join(', ');
+
     const prompt = `
 You are an expert educator creating quiz questions from educational content.
 
@@ -175,24 +183,31 @@ Content extracted from uploaded file:
 ${extractedContent.substring(0, 15000)}
 ---
 
-Create ${numQuestions} ${difficulty} difficulty educational questions based on this content.
-Question types to include: ${questionTypeInstructions}
+Create EXACTLY ${numQuestions} ${difficulty} difficulty educational questions based on this content.
+
+IMPORTANT - You MUST create this exact distribution of question types:
+${typeDistribution}
+
+Question type formats:
+- "multiple_choice": Requires "options" array with exactly 4 choices, "correctAnswer" must match one option exactly
+- "true_false": Requires "options" array ["True", "False"], "correctAnswer" must be either "True" or "False"  
+- "short_answer": NO options array (set to null), "correctAnswer" should be a brief expected answer
 
 Requirements:
 1. Questions should test understanding of the key concepts
-2. Vary the question types as specified
+2. You MUST follow the exact question type distribution specified above
 3. For multiple choice, provide 4 options with only one correct answer
 4. Include detailed explanations for each answer
 5. Ensure questions cover different parts of the content
 
-Return a JSON array:
+Return a JSON array with EXACTLY ${numQuestions} questions:
 [
   {
     "type": "multiple_choice" | "true_false" | "short_answer",
     "question": "Clear, well-formed question",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice, ["True", "False"] for true_false, null for short_answer),
-    "correctAnswer": "The correct answer exactly as it appears in options",
-    "explanation": "Detailed explanation of why this is correct and why other options are wrong",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice), ["True", "False"] (for true_false), null (for short_answer),
+    "correctAnswer": "The correct answer exactly as it appears in options (or expected answer for short_answer)",
+    "explanation": "Detailed explanation of why this is correct",
     "difficulty": "${difficulty}",
     "marks": 1
   }

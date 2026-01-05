@@ -189,21 +189,38 @@ Return ONLY a JSON object: {"cheatingScore": number, "details": "brief explanati
 export async function generateTestFromWebSearch(
   searchQuery: string,
   numberOfQuestions: number,
-  difficulty: 'easy' | 'medium' | 'hard'
+  difficulty: 'easy' | 'medium' | 'hard',
+  questionTypes: ('multiple_choice' | 'true_false' | 'short_answer')[] = ['multiple_choice']
 ): Promise<IQuestion[]> {
   try {
     const model = genAI.getGenerativeModel({ model: MODEL_NAME })
 
-    const prompt = `
-You are an expert test creator. Based on your knowledge about "${searchQuery}", create ${numberOfQuestions} ${difficulty} difficulty questions.
+    // Calculate distribution of question types
+    const questionsPerType = Math.floor(numberOfQuestions / questionTypes.length);
+    const remainder = numberOfQuestions % questionTypes.length;
+    const typeDistribution = questionTypes.map((type, index) => {
+      const count = questionsPerType + (index < remainder ? 1 : 0);
+      return `${count} ${type.replace('_', ' ')} question(s)`;
+    }).join(', ');
 
-Return a JSON array of questions:
+    const prompt = `
+You are an expert test creator. Based on your knowledge about "${searchQuery}", create EXACTLY ${numberOfQuestions} ${difficulty} difficulty questions.
+
+IMPORTANT - You MUST create this exact distribution of question types:
+${typeDistribution}
+
+Question type formats:
+- "multiple_choice": Requires "options" array with exactly 4 choices, "correctAnswer" must match one option exactly
+- "true_false": Requires "options" array ["True", "False"], "correctAnswer" must be either "True" or "False"
+- "short_answer": NO options array (set to null), "correctAnswer" should be a brief expected answer
+
+Return a JSON array with EXACTLY ${numberOfQuestions} questions:
 [
   {
-    "type": "multiple_choice",
+    "type": "multiple_choice" | "true_false" | "short_answer",
     "question": "Question text",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-    "correctAnswer": "Correct option",
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice), ["True", "False"] (for true_false), null (for short_answer),
+    "correctAnswer": "Correct answer",
     "explanation": "Explanation",
     "difficulty": "${difficulty}",
     "marks": 1
@@ -211,6 +228,7 @@ Return a JSON array of questions:
 ]
 
 Ensure questions are educational, accurate, and varied.
+You MUST follow the exact question type distribution specified above.
 Return only valid JSON array.
     `
 
@@ -293,6 +311,14 @@ Return only valid JSON.
       return type
     }).join(', ')
 
+    // Calculate distribution of question types
+    const questionsPerType = Math.floor(numberOfQuestions / questionTypes.length);
+    const remainder = numberOfQuestions % questionTypes.length;
+    const typeDistribution = questionTypes.map((type, index) => {
+      const count = questionsPerType + (index < remainder ? 1 : 0);
+      return `${count} ${type.replace('_', ' ')} question(s)`;
+    }).join(', ');
+
     const questionsPrompt = `
 Based on this research about "${topic}":
 
@@ -301,15 +327,22 @@ Key Facts: ${JSON.stringify(research.keyFacts)}
 Common Misconceptions: ${JSON.stringify(research.misconceptions)}
 Examples: ${JSON.stringify(research.examples)}
 
-Create ${numberOfQuestions} ${difficulty} difficulty educational questions.
-Include these question types: ${questionTypeInstructions}
+Create EXACTLY ${numberOfQuestions} ${difficulty} difficulty educational questions.
 
-Return a JSON array:
+IMPORTANT - You MUST create this exact distribution of question types:
+${typeDistribution}
+
+Question type formats:
+- "multiple_choice": Requires "options" array with exactly 4 choices, "correctAnswer" must match one option exactly
+- "true_false": Requires "options" array ["True", "False"], "correctAnswer" must be either "True" or "False"
+- "short_answer": NO options array (set to null), "correctAnswer" should be a brief expected answer
+
+Return a JSON array with EXACTLY ${numberOfQuestions} questions:
 [
   {
     "type": "multiple_choice" | "true_false" | "short_answer",
     "question": "Question text",
-    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice, ["True", "False"] for true_false, null for short_answer),
+    "options": ["Option 1", "Option 2", "Option 3", "Option 4"] (for multiple_choice), ["True", "False"] (for true_false), null (for short_answer),
     "correctAnswer": "Correct answer",
     "explanation": "Detailed explanation of why this is correct",
     "difficulty": "${difficulty}",
@@ -318,8 +351,7 @@ Return a JSON array:
 ]
 
 Make questions varied, educational, and test real understanding of the topic.
-Include questions that test both factual knowledge and conceptual understanding.
-For misconceptions, create questions that help clarify them.
+You MUST follow the exact question type distribution specified above.
 Return only valid JSON array.
     `
 

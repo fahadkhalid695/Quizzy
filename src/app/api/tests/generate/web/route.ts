@@ -3,7 +3,7 @@ import { generateTestFromWebSearch } from '@/lib/gemini';
 
 export async function POST(request: NextRequest) {
   try {
-    const { url, numQuestions, difficulty } = await request.json();
+    const { url, numQuestions, difficulty, questionTypes } = await request.json();
 
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
     const questions = await generateTestFromWebSearch(
       text,
       numQuestions || 5,
-      difficulty || 'medium'
+      difficulty || 'medium',
+      questionTypes || ['multiple_choice']
     );
 
     return NextResponse.json({
