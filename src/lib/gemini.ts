@@ -205,31 +205,10 @@ export async function generateTestFromWebSearch(
     });
     const typeDistribution = typeDistributionArr.map(t => `${t.count} ${t.type.replace('_', ' ')} question(s)`).join(', ');
 
-    const prompt = `
-You are an expert test creator. Based on your knowledge about "${searchQuery}", create EXACTLY ${numberOfQuestions} ${difficulty} difficulty questions.
-
-CRITICAL REQUIREMENTS:
-1. You MUST create EXACTLY this distribution: ${typeDistribution}
-2. Each question type has STRICT formatting rules:
-
-FOR "multiple_choice" QUESTIONS:
-- "type" must be exactly "multiple_choice"
-- "options" must be an array of EXACTLY 4 different answer choices (NOT True/False)
-- "correctAnswer" must EXACTLY match one of the 4 options
-
-FOR "true_false" QUESTIONS:
-- "type" must be exactly "true_false"  
-- "options" must be EXACTLY ["True", "False"]
-- "correctAnswer" must be EXACTLY "True" OR "False"
-
-FOR "short_answer" QUESTIONS:
-- "type" must be exactly "short_answer"
-- "options" must be null (no options)
-- "correctAnswer" should be a brief expected answer text
-
-Return a JSON array with EXACTLY ${numberOfQuestions} questions:
-[
-  {
+    // Build examples only for the selected types
+    const typeExamples: string[] = [];
+    if (questionTypes.includes('multiple_choice')) {
+      typeExamples.push(`{
     "type": "multiple_choice",
     "question": "What is the capital of France?",
     "options": ["London", "Paris", "Berlin", "Madrid"],
@@ -237,8 +216,10 @@ Return a JSON array with EXACTLY ${numberOfQuestions} questions:
     "explanation": "Paris is the capital city of France.",
     "difficulty": "${difficulty}",
     "marks": 1
-  },
-  {
+  }`);
+    }
+    if (questionTypes.includes('true_false')) {
+      typeExamples.push(`{
     "type": "true_false",
     "question": "The Earth is flat.",
     "options": ["True", "False"],
@@ -246,8 +227,10 @@ Return a JSON array with EXACTLY ${numberOfQuestions} questions:
     "explanation": "The Earth is approximately spherical.",
     "difficulty": "${difficulty}",
     "marks": 1
-  },
-  {
+  }`);
+    }
+    if (questionTypes.includes('short_answer')) {
+      typeExamples.push(`{
     "type": "short_answer",
     "question": "Name the largest planet in our solar system.",
     "options": null,
@@ -255,12 +238,53 @@ Return a JSON array with EXACTLY ${numberOfQuestions} questions:
     "explanation": "Jupiter is the largest planet.",
     "difficulty": "${difficulty}",
     "marks": 1
-  }
+  }`);
+    }
+
+    // Build type-specific instructions only for selected types
+    const typeInstructions: string[] = [];
+    if (questionTypes.includes('multiple_choice')) {
+      typeInstructions.push(`FOR "multiple_choice" QUESTIONS:
+- "type" must be exactly "multiple_choice"
+- "options" must be an array of EXACTLY 4 different answer choices
+- "correctAnswer" must EXACTLY match one of the 4 options
+- Do NOT use True/False as options`);
+    }
+    if (questionTypes.includes('true_false')) {
+      typeInstructions.push(`FOR "true_false" QUESTIONS:
+- "type" must be exactly "true_false"  
+- "options" must be EXACTLY ["True", "False"]
+- "correctAnswer" must be EXACTLY "True" OR "False"`);
+    }
+    if (questionTypes.includes('short_answer')) {
+      typeInstructions.push(`FOR "short_answer" QUESTIONS:
+- "type" must be exactly "short_answer"
+- "options" must be null (no options)
+- "correctAnswer" should be a brief expected answer text`);
+    }
+
+    // Emphasize single type if only one selected
+    const singleTypeEmphasis = questionTypes.length === 1 
+      ? `\n\n⚠️ VERY IMPORTANT: You are ONLY creating "${questionTypes[0].replace('_', ' ')}" questions. ALL ${numberOfQuestions} questions MUST be of type "${questionTypes[0]}". Do NOT create any other question types.`
+      : '';
+
+    const prompt = `
+You are an expert test creator. Based on your knowledge about "${searchQuery}", create EXACTLY ${numberOfQuestions} ${difficulty} difficulty questions.
+
+CRITICAL REQUIREMENTS:
+1. Create EXACTLY this distribution: ${typeDistribution}
+2. ONLY use these question types: ${questionTypes.join(', ')}${singleTypeEmphasis}
+
+${typeInstructions.join('\n\n')}
+
+Return a JSON array with EXACTLY ${numberOfQuestions} questions. Example format:
+[
+  ${typeExamples.join(',\n  ')}
 ]
 
-IMPORTANT:
-- Do NOT mix formats (no True/False options in MCQ)
-- Each question type must strictly follow its format
+CRITICAL:
+- Create ONLY the question types listed above: ${questionTypes.join(', ')}
+- Do NOT create any question types not in that list
 - Return ONLY valid JSON array, no other text
     `
 
@@ -272,11 +296,16 @@ IMPORTANT:
     if (jsonMatch) {
       const parsed = JSON.parse(jsonMatch[0])
       
-      // Post-process and validate each question
+      // Post-process and validate each question - ENFORCE selected types
       return parsed.map((q: any) => {
-        const questionType = q.type || QuestionType.MULTIPLE_CHOICE;
+        let questionType = q.type || QuestionType.MULTIPLE_CHOICE;
         let options = q.options;
         let correctAnswer = q.correctAnswer;
+        
+        // If the AI generated a type that wasn't requested, convert it to the first requested type
+        if (!questionTypes.includes(questionType as any)) {
+          questionType = questionTypes[0];
+        }
         
         // Validate and fix options based on question type
         if (questionType === 'true_false') {
@@ -287,6 +316,10 @@ IMPORTANT:
           }
         } else if (questionType === 'short_answer') {
           options = null;
+        } else if (questionType === 'multiple_choice') {
+          if (!options || !Array.isArray(options) || options.length < 4) {
+            // Keep the question but ensure it has proper format
+          }
         }
         
         return {
@@ -383,6 +416,69 @@ Return only valid JSON.
     
     const typeDistribution = typeDistributionArr.map(t => `${t.count} ${t.type.replace('_', ' ')} question(s)`).join(', ');
 
+    // Build examples only for the selected types
+    const typeExamples: string[] = [];
+    if (questionTypes.includes('multiple_choice')) {
+      typeExamples.push(`{
+    "type": "multiple_choice",
+    "question": "What is the capital of France?",
+    "options": ["London", "Paris", "Berlin", "Madrid"],
+    "correctAnswer": "Paris",
+    "explanation": "Paris is the capital city of France.",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  }`);
+    }
+    if (questionTypes.includes('true_false')) {
+      typeExamples.push(`{
+    "type": "true_false",
+    "question": "The Earth is flat.",
+    "options": ["True", "False"],
+    "correctAnswer": "False",
+    "explanation": "The Earth is approximately spherical.",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  }`);
+    }
+    if (questionTypes.includes('short_answer')) {
+      typeExamples.push(`{
+    "type": "short_answer",
+    "question": "Name the largest planet in our solar system.",
+    "options": null,
+    "correctAnswer": "Jupiter",
+    "explanation": "Jupiter is the largest planet.",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  }`);
+    }
+
+    // Build type-specific instructions only for selected types
+    const typeInstructions: string[] = [];
+    if (questionTypes.includes('multiple_choice')) {
+      typeInstructions.push(`FOR "multiple_choice" QUESTIONS:
+- "type" must be exactly "multiple_choice"
+- "options" must be an array of EXACTLY 4 different answer choices
+- "correctAnswer" must EXACTLY match one of the 4 options
+- Do NOT use True/False as options for multiple choice`);
+    }
+    if (questionTypes.includes('true_false')) {
+      typeInstructions.push(`FOR "true_false" QUESTIONS:
+- "type" must be exactly "true_false"  
+- "options" must be EXACTLY ["True", "False"]
+- "correctAnswer" must be EXACTLY "True" OR "False"`);
+    }
+    if (questionTypes.includes('short_answer')) {
+      typeInstructions.push(`FOR "short_answer" QUESTIONS:
+- "type" must be exactly "short_answer"
+- "options" must be null (no options)
+- "correctAnswer" should be a brief expected answer text`);
+    }
+
+    // Emphasize single type if only one selected
+    const singleTypeEmphasis = questionTypes.length === 1 
+      ? `\n\n⚠️ VERY IMPORTANT: You are ONLY creating "${questionTypes[0].replace('_', ' ')}" questions. ALL ${numberOfQuestions} questions MUST be of type "${questionTypes[0]}". Do NOT create any other question types.`
+      : '';
+
     const questionsPrompt = `
 Based on this research about "${topic}":
 
@@ -394,58 +490,19 @@ Examples: ${JSON.stringify(research.examples)}
 Create EXACTLY ${numberOfQuestions} ${difficulty} difficulty educational questions.
 
 CRITICAL REQUIREMENTS:
-1. You MUST create EXACTLY this distribution: ${typeDistribution}
-2. Each question type has STRICT formatting rules:
+1. Create EXACTLY this distribution: ${typeDistribution}
+2. ONLY use these question types: ${questionTypes.join(', ')}${singleTypeEmphasis}
 
-FOR "multiple_choice" QUESTIONS:
-- "type" must be exactly "multiple_choice"
-- "options" must be an array of EXACTLY 4 different answer choices (NOT True/False)
-- "correctAnswer" must EXACTLY match one of the 4 options
+${typeInstructions.join('\n\n')}
 
-FOR "true_false" QUESTIONS:
-- "type" must be exactly "true_false"  
-- "options" must be EXACTLY ["True", "False"]
-- "correctAnswer" must be EXACTLY "True" OR "False"
-
-FOR "short_answer" QUESTIONS:
-- "type" must be exactly "short_answer"
-- "options" must be null (no options)
-- "correctAnswer" should be a brief expected answer text
-
-Return a JSON array with EXACTLY ${numberOfQuestions} questions in this format:
+Return a JSON array with EXACTLY ${numberOfQuestions} questions. Example format:
 [
-  {
-    "type": "multiple_choice",
-    "question": "What is the capital of France?",
-    "options": ["London", "Paris", "Berlin", "Madrid"],
-    "correctAnswer": "Paris",
-    "explanation": "Paris is the capital city of France.",
-    "difficulty": "${difficulty}",
-    "marks": 1
-  },
-  {
-    "type": "true_false",
-    "question": "The Earth is flat.",
-    "options": ["True", "False"],
-    "correctAnswer": "False",
-    "explanation": "The Earth is approximately spherical.",
-    "difficulty": "${difficulty}",
-    "marks": 1
-  },
-  {
-    "type": "short_answer",
-    "question": "Name the largest planet in our solar system.",
-    "options": null,
-    "correctAnswer": "Jupiter",
-    "explanation": "Jupiter is the largest planet.",
-    "difficulty": "${difficulty}",
-    "marks": 1
-  }
+  ${typeExamples.join(',\n  ')}
 ]
 
-IMPORTANT: 
-- Do NOT mix formats (no True/False in MCQ options)
-- Each question type must strictly follow its format
+CRITICAL: 
+- Create ONLY the question types listed above: ${questionTypes.join(', ')}
+- Do NOT create any question types not in that list
 - Return ONLY valid JSON array, no other text
     `
 
@@ -459,10 +516,16 @@ IMPORTANT:
       const parsed = JSON.parse(questionsMatch[0])
       
       // Post-process and validate each question to ensure correct format
+      // Also ENFORCE the selected question types
       questions = parsed.map((q: any) => {
-        const questionType = q.type || QuestionType.MULTIPLE_CHOICE;
+        let questionType = q.type || QuestionType.MULTIPLE_CHOICE;
         let options = q.options;
         let correctAnswer = q.correctAnswer;
+        
+        // If the AI generated a type that wasn't requested, convert it to the first requested type
+        if (!questionTypes.includes(questionType as any)) {
+          questionType = questionTypes[0];
+        }
         
         // Validate and fix options based on question type
         if (questionType === 'true_false') {

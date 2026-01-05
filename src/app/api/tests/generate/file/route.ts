@@ -159,6 +159,69 @@ export async function POST(request: NextRequest) {
       `${t.count} ${t.type.replace('_', ' ')} question(s)`
     ).join(', ');
 
+    // Build examples only for the selected types
+    const typeExamples: string[] = [];
+    if (questionTypes.includes('multiple_choice')) {
+      typeExamples.push(`{
+    "type": "multiple_choice",
+    "question": "What is the main topic discussed in the document?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswer": "Option A",
+    "explanation": "This is correct because...",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  }`);
+    }
+    if (questionTypes.includes('true_false')) {
+      typeExamples.push(`{
+    "type": "true_false",
+    "question": "The document states that X is Y.",
+    "options": ["True", "False"],
+    "correctAnswer": "True",
+    "explanation": "According to the document...",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  }`);
+    }
+    if (questionTypes.includes('short_answer')) {
+      typeExamples.push(`{
+    "type": "short_answer",
+    "question": "What is the definition of X according to the text?",
+    "options": null,
+    "correctAnswer": "Expected brief answer",
+    "explanation": "The text defines X as...",
+    "difficulty": "${difficulty}",
+    "marks": 1
+  }`);
+    }
+
+    // Build type-specific instructions only for selected types
+    const typeInstructions: string[] = [];
+    if (questionTypes.includes('multiple_choice')) {
+      typeInstructions.push(`FOR "multiple_choice" QUESTIONS:
+- "type" must be exactly "multiple_choice"
+- "options" must be an array of EXACTLY 4 different answer choices
+- "correctAnswer" must EXACTLY match one of the 4 options
+- Do NOT use True/False as options`);
+    }
+    if (questionTypes.includes('true_false')) {
+      typeInstructions.push(`FOR "true_false" QUESTIONS:
+- "type" must be exactly "true_false"  
+- "options" must be EXACTLY ["True", "False"]
+- "correctAnswer" must be EXACTLY "True" OR "False"`);
+    }
+    if (questionTypes.includes('short_answer')) {
+      typeInstructions.push(`FOR "short_answer" QUESTIONS:
+- "type" must be exactly "short_answer"
+- "options" must be null (no options)
+- "correctAnswer" should be a brief expected answer text`);
+    }
+
+    // Emphasize single type if only one selected
+    const singleTypeEmphasis = questionTypes.length === 1 
+      ? `\n\n⚠️ VERY IMPORTANT: You are ONLY creating "${questionTypes[0].replace('_', ' ')}" questions. ALL ${numQuestions} questions MUST be of type "${questionTypes[0]}". Do NOT create any other question types.`
+      : '';
+
     const prompt = `
 You are an expert educator creating quiz questions from educational content.
 
@@ -170,58 +233,19 @@ ${extractedContent.substring(0, 15000)}
 Create EXACTLY ${numQuestions} ${difficulty} difficulty educational questions based on this content.
 
 CRITICAL REQUIREMENTS:
-1. You MUST create EXACTLY this distribution: ${typeDistribution}
-2. Each question type has STRICT formatting rules:
+1. Create EXACTLY this distribution: ${typeDistribution}
+2. ONLY use these question types: ${questionTypes.join(', ')}${singleTypeEmphasis}
 
-FOR "multiple_choice" QUESTIONS:
-- "type" must be exactly "multiple_choice"
-- "options" must be an array of EXACTLY 4 different answer choices (NOT True/False)
-- "correctAnswer" must EXACTLY match one of the 4 options
+${typeInstructions.join('\n\n')}
 
-FOR "true_false" QUESTIONS:
-- "type" must be exactly "true_false"  
-- "options" must be EXACTLY ["True", "False"]
-- "correctAnswer" must be EXACTLY "True" OR "False"
-
-FOR "short_answer" QUESTIONS:
-- "type" must be exactly "short_answer"
-- "options" must be null (no options)
-- "correctAnswer" should be a brief expected answer text
-
-Return a JSON array with EXACTLY ${numQuestions} questions:
+Return a JSON array with EXACTLY ${numQuestions} questions. Example format:
 [
-  {
-    "type": "multiple_choice",
-    "question": "What is the main topic discussed in the document?",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correctAnswer": "Option A",
-    "explanation": "This is correct because...",
-    "difficulty": "${difficulty}",
-    "marks": 1
-  },
-  {
-    "type": "true_false",
-    "question": "The document states that X is Y.",
-    "options": ["True", "False"],
-    "correctAnswer": "True",
-    "explanation": "According to the document...",
-    "difficulty": "${difficulty}",
-    "marks": 1
-  },
-  {
-    "type": "short_answer",
-    "question": "What is the definition of X according to the text?",
-    "options": null,
-    "correctAnswer": "Expected brief answer",
-    "explanation": "The text defines X as...",
-    "difficulty": "${difficulty}",
-    "marks": 1
-  }
+  ${typeExamples.join(',\n  ')}
 ]
 
-IMPORTANT:
-- Do NOT mix formats (no True/False options in MCQ)
-- Each question type must strictly follow its format
+CRITICAL:
+- Create ONLY the question types listed above: ${questionTypes.join(', ')}
+- Do NOT create any question types not in that list
 - Questions should test understanding of the key concepts
 - Return ONLY valid JSON array, no other text
     `;
@@ -242,10 +266,16 @@ IMPORTANT:
     const parsedQuestions = JSON.parse(jsonMatch[0]);
     
     // Post-process and validate each question to ensure correct format
+    // ENFORCE the selected question types
     const questions = parsedQuestions.map((q: any) => {
-      const questionType = q.type || 'multiple_choice';
+      let questionType = q.type || 'multiple_choice';
       let options = q.options;
       let correctAnswer = q.correctAnswer;
+      
+      // If the AI generated a type that wasn't requested, convert it to the first requested type
+      if (!questionTypes.includes(questionType)) {
+        questionType = questionTypes[0];
+      }
       
       // Validate and fix options based on question type
       if (questionType === 'true_false') {
