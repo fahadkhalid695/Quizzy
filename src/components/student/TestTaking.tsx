@@ -28,121 +28,52 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
   const [submitting, setSubmitting] = useState(false);
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
-  const [timerStarted, setTimerStarted] = useState(false);
   const [answers, setAnswers] = useState<Map<string, any>>(new Map());
   const [tabWarnings, setTabWarnings] = useState(0);
   const [classId, setClassId] = useState(propClassId);
   const notify = useNotify();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const submittingRef = useRef(false);
+  const testRef = useRef<any>(null);
+  const answersRef = useRef<Map<string, any>>(new Map());
+  const classIdRef = useRef(propClassId);
 
-  // Fetch test
+  // Keep refs in sync with state
   useEffect(() => {
-    const fetchTest = async () => {
-      try {
-        const response = await api.get<{ test: any }>(`/api/tests/${testId}`);
-        setTest(response.test);
-        const duration = (response.test.duration || 60) * 60; // Convert to seconds
-        setTimeLeft(duration);
-        
-        // Get classId from test if not provided in props
-        if (!propClassId && response.test.classId) {
-          const testClassId = typeof response.test.classId === 'object' 
-            ? response.test.classId._id || response.test.classId.id 
-            : response.test.classId;
-          setClassId(testClassId);
-        }
-        
-        // Start timer after test is loaded
-        setTimerStarted(true);
-      } catch (error) {
-        notify.error('Failed to load test');
-      } finally {
-        setLoading(false);
-      }
-    };
+    testRef.current = test;
+  }, [test]);
 
-    fetchTest();
-  }, [testId, notify, propClassId]);
-
-  // Timer - runs independently once started
   useEffect(() => {
-    if (!timerStarted || timeLeft <= 0) return;
+    answersRef.current = answers;
+  }, [answers]);
 
-    // Clear any existing timer
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, [timerStarted]);
-
-  // Auto-submit when time runs out
   useEffect(() => {
-    if (timerStarted && timeLeft === 0 && test && !submitting) {
-      notify.warning('Time is up! Submitting your test...');
-      handleSubmitInternal();
-    }
-  }, [timeLeft, timerStarted, test, submitting]);
+    classIdRef.current = classId;
+  }, [classId]);
 
-  // Tab visibility detection - AUTO SUBMIT on tab switch
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setTabWarnings((prev) => {
-          const newWarnings = prev + 1;
-          if (newWarnings >= 3) {
-            notify.error('Too many tab switches detected. Submitting test...');
-            handleSubmitInternal();
-          } else {
-            notify.warning(`Warning: Do not switch tabs! (${newWarnings}/3)`);
-          }
-          return newWarnings;
-        });
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
-
-  const handleAnswerChange = (questionId: string, answer: any) => {
-    const newAnswers = new Map(answers);
-    newAnswers.set(questionId, answer);
-    setAnswers(newAnswers);
-  };
-
-  // Internal submit function (not memoized, for use in effects)
-  const handleSubmitInternal = async () => {
-    if (submitting || !test) return;
+  // Internal submit function using refs for current values
+  const handleSubmitInternal = useCallback(async () => {
+    if (submittingRef.current || !testRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
 
     try {
-      const answersArray = test.questions.map((q: Question) => ({
+      const currentTest = testRef.current;
+      const currentAnswers = answersRef.current;
+      const currentClassId = classIdRef.current;
+
+      const answersArray = currentTest.questions.map((q: Question) => ({
         questionId: q._id,
-        answer: answers.get(q._id) || '',
+        answer: currentAnswers.get(q._id) || '',
         timeSpent: 0,
       }));
 
-      // Use classId from state (either from props or from test data)
-      const submitClassId = classId || (test.classId?._id || test.classId?.id || test.classId);
+      // Use classId from ref
+      const submitClassId = currentClassId || (currentTest.classId?._id || currentTest.classId?.id || currentTest.classId);
       
       if (!submitClassId) {
         notify.error('Class ID is missing. Please go back and try again.');
+        submittingRef.current = false;
         setSubmitting(false);
         return;
       }
@@ -170,13 +101,108 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
       } else {
         notify.error(error instanceof Error ? error.message : 'Failed to submit test');
       }
+      submittingRef.current = false;
       setSubmitting(false);
     }
+  }, [testId, notify, onSubmit]);
+
+  // Fetch test
+  useEffect(() => {
+    const fetchTest = async () => {
+      try {
+        const response = await api.get<{ test: any }>(`/api/tests/${testId}`);
+        setTest(response.test);
+        testRef.current = response.test;
+        
+        const duration = (response.test.duration || 60) * 60; // Convert to seconds
+        setTimeLeft(duration);
+        
+        // Get classId from test if not provided in props
+        if (!propClassId && response.test.classId) {
+          const testClassId = typeof response.test.classId === 'object' 
+            ? response.test.classId._id || response.test.classId.id 
+            : response.test.classId;
+          setClassId(testClassId);
+          classIdRef.current = testClassId;
+        }
+      } catch (error) {
+        notify.error('Failed to load test');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTest();
+  }, [testId, notify, propClassId]);
+
+  // Timer - simple countdown
+  useEffect(() => {
+    if (loading || timeLeft <= 0) return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          return 0;
+        }
+        return newTime;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [loading]); // Only depend on loading - runs once when test is loaded
+
+  // Auto-submit when time runs out
+  useEffect(() => {
+    if (timeLeft === 0 && test && !submittingRef.current) {
+      notify.warning('Time is up! Submitting your test...');
+      handleSubmitInternal();
+    }
+  }, [timeLeft, test, handleSubmitInternal, notify]);
+
+  // Tab visibility detection - AUTO SUBMIT on tab switch
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && testRef.current && !submittingRef.current) {
+        setTabWarnings((prev) => {
+          const newWarnings = prev + 1;
+          if (newWarnings >= 3) {
+            notify.error('Too many tab switches detected. Submitting test...');
+            // Use setTimeout to ensure state update completes
+            setTimeout(() => {
+              handleSubmitInternal();
+            }, 100);
+          } else {
+            notify.warning(`Warning: Do not switch tabs! (${newWarnings}/3)`);
+          }
+          return newWarnings;
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [handleSubmitInternal, notify]);
+
+  const handleAnswerChange = (questionId: string, answer: any) => {
+    const newAnswers = new Map(answers);
+    newAnswers.set(questionId, answer);
+    setAnswers(newAnswers);
+    answersRef.current = newAnswers;
   };
 
   const handleSubmit = useCallback(() => {
     handleSubmitInternal();
-  }, [test, answers, testId, classId, notify, onSubmit, submitting]);
+  }, [handleSubmitInternal]);
 
   if (loading) {
     return <div className="text-center py-12">Loading test...</div>;
