@@ -166,14 +166,14 @@ export default function StudentDashboard() {
     { icon: '📈', label: 'My Results', href: '/student/results' },
     { icon: '🏆', label: 'Leaderboard', href: '/student/leaderboard' },
     { icon: '⚙️', label: 'Settings', href: '/student/settings' },
-  ]
+  ];
 
   const statCards = [
     { label: 'Tests Taken', value: stats.testsTaken.toString(), icon: '📝', color: 'from-blue-500 to-cyan-500', change: `${stats.totalTests} available` },
     { label: 'Average Score', value: `${stats.averageScore}%`, icon: '📊', color: 'from-purple-500 to-pink-500', change: stats.averageScore >= 70 ? 'Great work!' : 'Keep practicing' },
     { label: 'Best Score', value: `${stats.bestScore}%`, icon: '⭐', color: 'from-yellow-500 to-orange-500', change: stats.bestScore >= 90 ? 'Excellent!' : 'Personal best' },
     { label: 'Tests Available', value: stats.totalTests.toString(), icon: '🏆', color: 'from-green-500 to-emerald-500', change: 'Ready to take' },
-  ]
+  ];
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900">
