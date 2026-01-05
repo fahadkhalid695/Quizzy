@@ -44,8 +44,15 @@ export default function TestForm({ classId, onSuccess }: TestFormProps) {
     const { name, value } = e.target;
     setTestData((prev) => ({
       ...prev,
-      [name]: name === 'duration' ? parseInt(value) : value,
+      [name]: name === 'duration' ? (parseInt(value, 10) || 0) : value,
     }));
+  };
+
+  const handleDurationBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value, 10);
+    if (isNaN(val) || val < 5) {
+      setTestData(prev => ({ ...prev, duration: 5 }));
+    }
   };
 
   const handleAddQuestion = () => {
@@ -141,8 +148,9 @@ export default function TestForm({ classId, onSuccess }: TestFormProps) {
                   label="Duration (minutes)"
                   name="duration"
                   type="number"
-                  value={testData.duration}
+                  value={testData.duration.toString()}
                   onChange={handleTestChange}
+                  onBlur={handleDurationBlur}
                   min="5"
                   max="300"
                 />

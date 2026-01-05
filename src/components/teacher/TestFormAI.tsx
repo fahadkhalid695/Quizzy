@@ -662,8 +662,23 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
             <Input
               label="Duration (minutes)"
               type="number"
-              value={testData.duration}
-              onChange={(e) => setTestData(prev => ({ ...prev, duration: parseInt(e.target.value) || 60 }))}
+              value={testData.duration.toString()}
+              onChange={(e) => {
+                const val = e.target.value;
+                const num = parseInt(val, 10);
+                if (!isNaN(num) && num > 0) {
+                  setTestData(prev => ({ ...prev, duration: num }));
+                } else if (val === '') {
+                  setTestData(prev => ({ ...prev, duration: 0 }));
+                }
+              }}
+              onBlur={(e) => {
+                // Ensure minimum of 5 minutes on blur
+                const val = parseInt(e.target.value, 10);
+                if (isNaN(val) || val < 5) {
+                  setTestData(prev => ({ ...prev, duration: 5 }));
+                }
+              }}
               min="5"
               max="300"
             />
