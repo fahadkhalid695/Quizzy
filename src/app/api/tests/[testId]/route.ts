@@ -52,6 +52,8 @@ export async function GET(request: NextRequest, props: { params: Promise<{ testI
         isPublished: test.isPublished,
         startTime: test.startTime,
         endTime: test.endTime,
+        isDynamic: test.isDynamic || false,
+        dynamicSettings: test.dynamicSettings || null,
         classId: {
           _id: test.classId,
           id: test.classId,

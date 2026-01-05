@@ -71,20 +71,20 @@ export default function StudentResultsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <BackButton href="/student/dashboard" label="Dashboard" />
         </div>
 
         <div>
-          <h1 className="text-4xl font-bold text-white">📈 My Results</h1>
-          <p className="text-gray-400 mt-2">View your test performance history</p>
+          <h1 className="text-2xl md:text-4xl font-bold text-white">📈 My Results</h1>
+          <p className="text-gray-400 mt-1 md:mt-2 text-sm md:text-base">View your test performance history</p>
         </div>
 
         {/* Stats Summary */}
         {results.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <StatCard 
               icon="📝" 
               title="Tests Taken" 
@@ -110,40 +110,40 @@ export default function StudentResultsPage() {
 
         {/* Results List */}
         {loading ? (
-          <div className="text-center py-12 text-gray-400">Loading results...</div>
+          <div className="text-center py-8 md:py-12 text-gray-400">Loading results...</div>
         ) : results.length === 0 ? (
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12 text-center">
-            <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-xl font-bold text-white mb-2">No Results Yet</h3>
-            <p className="text-gray-400 mb-6">Take a test to see your results here</p>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl md:rounded-2xl p-6 md:p-12 text-center">
+            <div className="text-4xl md:text-6xl mb-4">📝</div>
+            <h3 className="text-lg md:text-xl font-bold text-white mb-2">No Results Yet</h3>
+            <p className="text-gray-400 mb-4 md:mb-6 text-sm md:text-base">Take a test to see your results here</p>
             <button
               onClick={() => router.push('/student/tests')}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition"
+              className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition text-sm md:text-base"
             >
               Browse Tests
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {results.map((result) => (
               <div
                 key={result.id}
-                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:bg-white/15 transition"
+                className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl md:rounded-2xl p-4 md:p-6 hover:bg-white/15 transition"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white">{result.testId?.title || 'Test'}</h3>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg md:text-xl font-bold text-white truncate">{result.testId?.title || 'Test'}</h3>
+                    <div className="flex flex-wrap items-center gap-2 md:gap-4 mt-2 text-xs md:text-sm text-gray-400">
                       <span>📅 {new Date(result.submittedAt).toLocaleDateString()}</span>
-                      <span>⏱️ {Math.round(result.timeTaken / 60)} minutes</span>
-                      <span>📊 Score: {result.score}/{result.testId?.totalMarks || 100}</span>
+                      <span>⏱️ {Math.round(result.timeTaken / 60)}m</span>
+                      <span>📊 {result.score}/{result.testId?.totalMarks || 100}</span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className={`text-4xl font-bold bg-gradient-to-r ${getGradeColor(result.percentage)} bg-clip-text text-transparent`}>
+                  <div className="flex items-center gap-4 sm:flex-col sm:items-end">
+                    <div className={`text-2xl md:text-4xl font-bold bg-gradient-to-r ${getGradeColor(result.percentage)} bg-clip-text text-transparent`}>
                       {result.percentage.toFixed(1)}%
                     </div>
-                    <div className={`text-lg font-semibold bg-gradient-to-r ${getGradeColor(result.percentage)} bg-clip-text text-transparent`}>
+                    <div className={`text-sm md:text-lg font-semibold bg-gradient-to-r ${getGradeColor(result.percentage)} bg-clip-text text-transparent`}>
                       Grade: {getGrade(result.percentage)}
                     </div>
                   </div>
@@ -166,15 +166,15 @@ export default function StudentResultsPage() {
 
 function StatCard({ icon, title, value }: { icon: string; title: string; value: string | number }) {
   return (
-    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-4">
+    <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg md:rounded-xl p-3 md:p-4">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-400 text-sm">{title}</p>
-          <p className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        <div className="min-w-0">
+          <p className="text-gray-400 text-xs md:text-sm">{title}</p>
+          <p className="text-lg md:text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent truncate">
             {value}
           </p>
         </div>
-        <span className="text-3xl">{icon}</span>
+        <span className="text-2xl md:text-3xl flex-shrink-0">{icon}</span>
       </div>
     </div>
   );

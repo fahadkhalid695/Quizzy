@@ -116,7 +116,7 @@ export default function TestsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
         {/* Back Button */}
         <div className="flex items-center gap-4">
           <BackButton href="/student/dashboard" label="Dashboard" />
@@ -124,46 +124,46 @@ export default function TestsPage() {
 
         {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold text-white">📝 Available Tests</h1>
-          <p className="text-gray-400 mt-2">Select a test to begin</p>
+          <h1 className="text-2xl md:text-4xl font-bold text-white">📝 Available Tests</h1>
+          <p className="text-gray-400 mt-1 md:mt-2 text-sm md:text-base">Select a test to begin</p>
         </div>
 
         {/* Filter */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(['all', 'available', 'completed'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
+              className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium transition flex items-center gap-1 md:gap-2 text-sm md:text-base ${
                 filter === f
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                   : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
               }`}
             >
-              {f === 'all' ? `All (${tests.length})` : f === 'available' ? `Available (${availableCount})` : `Completed (${completedCount})`}
+              {f === 'all' ? `All (${tests.length})` : f === 'available' ? `Available (${availableCount})` : `Done (${completedCount})`}
             </button>
           ))}
         </div>
 
         {/* Tests Grid */}
         {tests.length === 0 ? (
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12">
-            <div className="text-center space-y-6">
-              <div className="text-4xl mb-4">📚</div>
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl md:rounded-2xl p-6 md:p-12">
+            <div className="text-center space-y-4 md:space-y-6">
+              <div className="text-3xl md:text-4xl mb-4">📚</div>
               {classes.length === 0 ? (
                 <>
-                  <p className="text-gray-400 text-lg">You haven&apos;t joined any classes yet</p>
-                  <p className="text-gray-500 text-sm">Join a class using a code from your teacher to see available tests</p>
+                  <p className="text-gray-400 text-base md:text-lg">You haven&apos;t joined any classes yet</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Join a class using a code from your teacher to see available tests</p>
                   
                   {/* Join Class Form */}
-                  <div className="max-w-md mx-auto mt-6">
-                    <div className="flex gap-3">
+                  <div className="max-w-md mx-auto mt-4 md:mt-6">
+                    <div className="flex flex-col sm:flex-row gap-3">
                       <input
                         type="text"
                         value={joinCode}
                         onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                         placeholder="Enter class code (e.g., ABC123)"
-                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+                        className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500 text-sm md:text-base"
                       />
                       <Button
                         variant="primary"
@@ -177,9 +177,9 @@ export default function TestsPage() {
                 </>
               ) : (
                 <>
-                  <p className="text-gray-400 text-lg">No tests available yet</p>
-                  <p className="text-gray-500 text-sm">Your teacher hasn&apos;t published any tests for your classes yet</p>
-                  <div className="text-sm text-gray-500 mt-4">
+                  <p className="text-gray-400 text-base md:text-lg">No tests available yet</p>
+                  <p className="text-gray-500 text-xs md:text-sm">Your teacher hasn&apos;t published any tests for your classes yet</p>
+                  <div className="text-xs md:text-sm text-gray-500 mt-4">
                     <p>You&apos;re enrolled in {classes.length} class(es):</p>
                     <ul className="mt-2 space-y-1">
                       {classes.map(c => (
@@ -192,33 +192,33 @@ export default function TestsPage() {
             </div>
           </div>
         ) : filteredTests.length === 0 ? (
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12">
-            <div className="text-center space-y-4">
-              <div className="text-4xl mb-4">{filter === 'available' ? '✅' : '📝'}</div>
-              <p className="text-gray-400 text-lg">
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl md:rounded-2xl p-6 md:p-12">
+            <div className="text-center space-y-3 md:space-y-4">
+              <div className="text-3xl md:text-4xl mb-4">{filter === 'available' ? '✅' : '📝'}</div>
+              <p className="text-gray-400 text-base md:text-lg">
                 {filter === 'available' 
                   ? 'All tests completed!' 
                   : 'No completed tests yet'}
               </p>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 text-xs md:text-sm">
                 {filter === 'available' 
                   ? 'Great job! You have completed all available tests.' 
                   : 'Complete some tests to see them here.'}
               </p>
               <button
                 onClick={() => setFilter(filter === 'available' ? 'completed' : 'available')}
-                className="mt-4 px-6 py-2 bg-purple-600/50 hover:bg-purple-600 text-white rounded-lg transition"
+                className="mt-4 px-4 md:px-6 py-2 bg-purple-600/50 hover:bg-purple-600 text-white rounded-lg transition text-sm md:text-base"
               >
                 View {filter === 'available' ? 'Completed' : 'Available'} Tests
               </button>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {filteredTests.map((test) => (
               <div
                 key={test.id}
-                className={`bg-white/10 backdrop-blur-md border rounded-2xl p-6 transition ${
+                className={`bg-white/10 backdrop-blur-md border rounded-xl md:rounded-2xl p-4 md:p-6 transition ${
                   test.isSubmitted 
                     ? 'border-green-500/30 bg-green-500/5' 
                     : 'border-white/20 hover:bg-white/15 hover:border-purple-400/50 cursor-pointer'
@@ -226,27 +226,27 @@ export default function TestsPage() {
                 onClick={() => !test.isSubmitted && handleStartTest(test.id, test.classId?.id || '')}
               >
                 <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <h3 className="text-xl font-bold text-white">{test.title}</h3>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-lg md:text-xl font-bold text-white">{test.title}</h3>
                     {test.isSubmitted && (
-                      <span className="px-3 py-1 bg-green-500/20 text-green-400 text-sm font-medium rounded-full">
+                      <span className="px-2 md:px-3 py-1 bg-green-500/20 text-green-400 text-xs md:text-sm font-medium rounded-full whitespace-nowrap">
                         ✓ Submitted
                       </span>
                     )}
                   </div>
                   
                   {test.description && (
-                    <p className="text-gray-400 text-sm">{test.description}</p>
+                    <p className="text-gray-400 text-xs md:text-sm line-clamp-2">{test.description}</p>
                   )}
 
-                  <div className="bg-white/5 rounded-lg p-3 space-y-2">
+                  <div className="bg-white/5 rounded-lg p-2 md:p-3 space-y-1.5 md:space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Class:</span>
-                      <span className="font-medium text-white">{test.classId?.name}</span>
+                      <span className="text-gray-400 text-xs md:text-sm">Class:</span>
+                      <span className="font-medium text-white text-xs md:text-sm">{test.classId?.name}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Duration:</span>
-                      <span className="font-medium text-white">⏱️ {test.duration} minutes</span>
+                      <span className="text-gray-400 text-xs md:text-sm">Duration:</span>
+                      <span className="font-medium text-white text-xs md:text-sm">⏱️ {test.duration}m</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Total Marks:</span>

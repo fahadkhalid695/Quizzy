@@ -295,14 +295,14 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
   const totalQuestions = test.questions.length;
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900">
-      {/* Header */}
-      <div className="bg-black/40 backdrop-blur-xl border-b border-white/10 p-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">{test.title}</h1>
-          <p className="text-sm text-gray-400">{test.description}</p>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-purple-900/30 to-slate-900">
+      {/* Header - Mobile Responsive */}
+      <div className="bg-black/40 backdrop-blur-xl border-b border-white/10 p-3 md:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg md:text-2xl font-bold text-white truncate">{test.title}</h1>
+          <p className="text-xs md:text-sm text-gray-400 truncate">{test.description}</p>
         </div>
-        <div className={`text-2xl font-bold px-4 py-2 rounded-lg ${
+        <div className={`text-lg md:text-2xl font-bold px-3 py-1 md:px-4 md:py-2 rounded-lg whitespace-nowrap ${
           timeLeft !== null && timeLeft <= 300 
             ? 'text-red-400 bg-red-500/20 animate-pulse' 
             : 'text-purple-400 bg-purple-500/20'
@@ -311,21 +311,21 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 p-4 overflow-hidden">
-        {/* Question Navigator */}
-        <div className="lg:col-span-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 overflow-y-auto">
-          <h2 className="font-bold text-white mb-3">Questions ({answeredCount}/{totalQuestions})</h2>
-          <div className="grid grid-cols-4 lg:grid-cols-2 gap-2">
+      {/* Main Content - Mobile First */}
+      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-4 gap-3 md:gap-4 p-3 md:p-4 overflow-hidden">
+        {/* Question Navigator - Collapsible on mobile */}
+        <div className="lg:col-span-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-3 md:p-4 lg:overflow-y-auto">
+          <h2 className="font-bold text-white mb-2 md:mb-3 text-sm md:text-base">Questions ({answeredCount}/{totalQuestions})</h2>
+          <div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-5 gap-1 md:gap-2">
             {test.questions.map((q: Question, idx: number) => (
               <button
                 key={q._id || idx}
                 onClick={() => setCurrentQuestionIdx(idx)}
-                className={`aspect-square rounded-lg font-bold text-sm transition ${
+                className={`aspect-square rounded-md md:rounded-lg font-bold text-xs md:text-sm transition ${
                   idx === currentQuestionIdx
                     ? 'bg-purple-600 text-white ring-2 ring-purple-400'
                     : answers.has(q._id)
-                    ? 'bg-green-500/20 text-green-400 border-2 border-green-500/30'
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                     : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
               >
@@ -335,27 +335,27 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
           </div>
           
           {/* Progress indicator */}
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="flex justify-between text-sm text-gray-400 mb-2">
+          <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-white/10">
+            <div className="flex justify-between text-xs md:text-sm text-gray-400 mb-1 md:mb-2">
               <span>Progress</span>
               <span>{Math.round((answeredCount / totalQuestions) * 100)}%</span>
             </div>
-            <div className="w-full bg-white/10 rounded-full h-2">
+            <div className="w-full bg-white/10 rounded-full h-1.5 md:h-2">
               <div 
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-1.5 md:h-2 rounded-full transition-all"
                 style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
               />
             </div>
           </div>
         </div>
 
-        {/* Question Content */}
-        <div className="lg:col-span-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 overflow-y-auto">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white">
+        {/* Question Content - Mobile Responsive */}
+        <div className="lg:col-span-3 flex-1 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 overflow-y-auto">
+          <div className="mb-3 md:mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <h3 className="text-base md:text-lg font-bold text-white">
               Question {currentQuestionIdx + 1} of {totalQuestions}
             </h3>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs font-medium rounded">
                 {currentQuestion.type.replace('_', ' ').toUpperCase()}
               </span>
@@ -365,16 +365,16 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
             </div>
           </div>
           
-          <p className="text-lg text-white mb-6">{currentQuestion.question}</p>
+          <p className="text-base md:text-lg text-white mb-4 md:mb-6">{currentQuestion.question}</p>
 
-          {/* Answer Options */}
-          <div className="space-y-3">
+          {/* Answer Options - Mobile Optimized */}
+          <div className="space-y-2 md:space-y-3">
             {currentQuestion.type === 'multiple_choice' && currentQuestion.options && (
               <div className="space-y-2">
                 {currentQuestion.options.map((option: string, idx: number) => (
                   <label
                     key={idx}
-                    className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition ${
+                    className={`flex items-center p-3 md:p-4 border-2 rounded-lg md:rounded-xl cursor-pointer transition ${
                       answers.get(currentQuestion._id) === option
                         ? 'border-purple-500 bg-purple-500/20'
                         : 'border-white/20 hover:border-white/40 hover:bg-white/5'
@@ -386,21 +386,21 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
                       value={option}
                       checked={answers.get(currentQuestion._id) === option}
                       onChange={(e) => handleAnswerChange(currentQuestion._id, e.target.value)}
-                      className="w-4 h-4 text-purple-500"
+                      className="w-4 h-4 text-purple-500 flex-shrink-0"
                     />
-                    <span className="ml-3 text-white">{option}</span>
+                    <span className="ml-3 text-sm md:text-base text-white break-words">{option}</span>
                   </label>
                 ))}
               </div>
             )}
 
             {currentQuestion.type === 'true_false' && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2 md:gap-4">
                 {['True', 'False'].map((option) => (
                   <button
                     key={option}
                     onClick={() => handleAnswerChange(currentQuestion._id, option)}
-                    className={`py-4 px-6 rounded-xl font-semibold text-lg transition ${
+                    className={`py-3 md:py-4 px-4 md:px-6 rounded-lg md:rounded-xl font-semibold text-base md:text-lg transition ${
                       answers.get(currentQuestion._id) === option
                         ? 'bg-purple-600 text-white'
                         : 'bg-white/10 text-white hover:bg-white/20'
@@ -417,29 +417,31 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
                 value={answers.get(currentQuestion._id) || ''}
                 onChange={(e) => handleAnswerChange(currentQuestion._id, e.target.value)}
                 placeholder="Type your answer here..."
-                className="w-full bg-white/5 border-2 border-white/20 rounded-xl p-4 text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none resize-none"
-                rows={currentQuestion.type === 'essay' ? 8 : 4}
+                className="w-full bg-white/5 border-2 border-white/20 rounded-lg md:rounded-xl p-3 md:p-4 text-sm md:text-base text-white placeholder-gray-500 focus:border-purple-500 focus:outline-none resize-none"
+                rows={currentQuestion.type === 'essay' ? 6 : 3}
               />
             )}
           </div>
         </div>
       </div>
 
-      {/* Footer Navigation */}
-      <div className="bg-black/40 backdrop-blur-xl border-t border-white/10 p-4 flex items-center justify-between">
+      {/* Footer Navigation - Mobile Responsive */}
+      <div className="bg-black/40 backdrop-blur-xl border-t border-white/10 p-3 md:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0">
         <Button
           variant="secondary"
           onClick={() => setCurrentQuestionIdx(prev => Math.max(0, prev - 1))}
           disabled={currentQuestionIdx === 0}
+          className="text-sm md:text-base"
         >
-          ← Previous
+          ← Prev
         </Button>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-3 justify-end">
           {currentQuestionIdx < totalQuestions - 1 && (
             <Button
               variant="secondary"
               onClick={() => setCurrentQuestionIdx(prev => Math.min(totalQuestions - 1, prev + 1))}
+              className="text-sm md:text-base"
             >
               Next →
             </Button>
@@ -447,13 +449,13 @@ export default function TestTaking({ testId, classId: propClassId, onSubmit }: T
 
           <Button
             variant="primary"
-            size="lg"
             onClick={doSubmit}
             disabled={submitting}
+            className="text-sm md:text-base whitespace-nowrap"
           >
             {answeredCount === totalQuestions 
-              ? '✓ Submit Test' 
-              : `Submit (${answeredCount}/${totalQuestions} answered)`
+              ? '✓ Submit' 
+              : `Submit (${answeredCount}/${totalQuestions})`
             }
           </Button>
         </div>

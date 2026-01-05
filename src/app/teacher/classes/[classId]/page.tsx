@@ -227,18 +227,18 @@ export default function ClassDetailPage() {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-400">
+          <div className="flex items-center gap-2 text-xs md:text-sm text-gray-400">
             <span>👥 {students.length} students</span>
             <span>•</span>
             <span>📝 {tests.length} tests</span>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 border-b border-white/20">
+        {/* Tabs - Mobile Responsive */}
+        <div className="flex gap-1 md:gap-2 border-b border-white/20 overflow-x-auto">
           <button
             onClick={() => setActiveTab('tests')}
-            className={`px-4 py-3 font-semibold border-b-2 transition ${
+            className={`px-3 md:px-4 py-2 md:py-3 font-semibold border-b-2 transition whitespace-nowrap text-sm md:text-base ${
               activeTab === 'tests'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200'
@@ -248,7 +248,7 @@ export default function ClassDetailPage() {
           </button>
           <button
             onClick={() => setActiveTab('students')}
-            className={`px-4 py-3 font-semibold border-b-2 transition flex items-center gap-2 ${
+            className={`px-3 md:px-4 py-2 md:py-3 font-semibold border-b-2 transition flex items-center gap-1 md:gap-2 whitespace-nowrap text-sm md:text-base ${
               activeTab === 'students'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200'
@@ -256,14 +256,14 @@ export default function ClassDetailPage() {
           >
             👥 Students ({students.length})
             {pendingInvitations.length > 0 && (
-              <span className="px-2 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded-full">
-                {pendingInvitations.length} pending
+              <span className="px-1.5 md:px-2 py-0.5 text-xs bg-yellow-500/20 text-yellow-400 rounded-full">
+                {pendingInvitations.length}
               </span>
             )}
           </button>
           <button
             onClick={() => setActiveTab('leaderboard')}
-            className={`px-4 py-3 font-semibold border-b-2 transition ${
+            className={`px-3 md:px-4 py-2 md:py-3 font-semibold border-b-2 transition whitespace-nowrap text-sm md:text-base ${
               activeTab === 'leaderboard'
                 ? 'border-purple-500 text-purple-400'
                 : 'border-transparent text-gray-400 hover:text-gray-200'
@@ -300,7 +300,7 @@ export default function ClassDetailPage() {
             {!showTestForm && loading ? (
               <div className="text-center py-8 text-gray-400">Loading tests...</div>
             ) : !showTestForm && tests.length === 0 ? (
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12 text-center">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-12 text-center">
                 <div className="text-4xl mb-4">📝</div>
                 <p className="text-gray-400">No tests yet. Create your first test!</p>
               </div>
@@ -309,15 +309,15 @@ export default function ClassDetailPage() {
                 {tests.map((test) => (
                   <div 
                     key={test.id} 
-                    className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 hover:bg-white/15 hover:border-purple-400/50 transition"
+                    className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 md:p-6 hover:bg-white/15 hover:border-purple-400/50 transition"
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-lg font-bold text-white">{test.title}</h3>
+                          <h3 className="text-base md:text-lg font-bold text-white">{test.title}</h3>
                           {test.aiGenerated && (
                             <span className="px-2 py-0.5 text-xs bg-purple-500/20 text-purple-300 rounded-full">
-                              🤖 AI Generated
+                              🤖 AI
                             </span>
                           )}
                           {test.isDynamic && (
@@ -327,13 +327,13 @@ export default function ClassDetailPage() {
                           )}
                         </div>
                         {test.description && (
-                          <p className="text-gray-400 text-sm mt-1">{test.description}</p>
+                          <p className="text-gray-400 text-sm mt-1 line-clamp-2">{test.description}</p>
                         )}
-                        <div className="flex flex-wrap gap-3 mt-3 text-sm">
+                        <div className="flex flex-wrap gap-2 md:gap-3 mt-3 text-xs md:text-sm">
                           <span className="text-gray-400">
-                            📝 {test.questionCount} questions
+                            📝 {test.questionCount}
                           </span>
-                          <span className="text-gray-400">⏱️ {test.duration} min</span>
+                          <span className="text-gray-400">⏱️ {test.duration}m</span>
                           <span className="text-gray-400">⭐ {test.difficulty}</span>
                           <span
                             className={`font-medium ${
@@ -344,7 +344,7 @@ export default function ClassDetailPage() {
                           </span>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 self-end sm:self-start">
                         <Button 
                           variant={test.isPublished ? 'secondary' : 'success'}
                           size="sm"
@@ -371,8 +371,8 @@ export default function ClassDetailPage() {
         {/* Students Tab */}
         {activeTab === 'students' && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Class Students</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <h2 className="text-lg md:text-xl font-bold text-white">Class Students</h2>
               <Button variant="primary" onClick={() => setShowAddStudent(true)}>
                 + Add Student
               </Button>
@@ -380,20 +380,20 @@ export default function ClassDetailPage() {
 
             {/* Pending Invitations */}
             {pendingInvitations.length > 0 && (
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-                <h3 className="text-yellow-400 font-semibold mb-3 flex items-center gap-2">
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 md:p-4">
+                <h3 className="text-yellow-400 font-semibold mb-3 flex items-center gap-2 text-sm md:text-base">
                   ⏳ Pending Invitations ({pendingInvitations.length})
                 </h3>
                 <div className="space-y-2">
                   {pendingInvitations.map((inv) => (
-                    <div key={inv._id} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
-                      <div>
-                        <p className="text-white font-medium">{inv.studentName}</p>
-                        <p className="text-gray-400 text-sm">{inv.studentEmail}</p>
+                    <div key={inv._id} className="flex items-center justify-between bg-white/5 rounded-lg p-2 md:p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white font-medium text-sm md:text-base truncate">{inv.studentName}</p>
+                        <p className="text-gray-400 text-xs md:text-sm truncate">{inv.studentEmail}</p>
                       </div>
                       <button
                         onClick={() => handleCancelInvitation(inv._id)}
-                        className="text-red-400 hover:text-red-300 text-sm"
+                        className="text-red-400 hover:text-red-300 text-xs md:text-sm ml-2 whitespace-nowrap"
                       >
                         Cancel
                       </button>
@@ -405,7 +405,7 @@ export default function ClassDetailPage() {
 
             {/* Student List */}
             {students.length === 0 ? (
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-12 text-center">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 md:p-12 text-center">
                 <div className="text-4xl mb-4">👥</div>
                 <p className="text-gray-400 mb-4">No students in this class yet.</p>
                 <p className="text-gray-500 text-sm">
@@ -413,41 +413,70 @@ export default function ClassDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left p-4 text-gray-400 font-medium">Student</th>
-                      <th className="text-left p-4 text-gray-400 font-medium">Email</th>
-                      <th className="text-right p-4 text-gray-400 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.map((student) => (
-                      <tr key={student.id} className="border-b border-white/5 hover:bg-white/5">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                              {student.firstName[0]}{student.lastName[0]}
-                            </div>
-                            <span className="text-white font-medium">
-                              {student.firstName} {student.lastName}
-                            </span>
+              <>
+                {/* Mobile view - cards */}
+                <div className="block md:hidden space-y-3">
+                  {students.map((student) => (
+                    <div key={student.id} className="bg-white/5 border border-white/10 rounded-xl p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                            {student.firstName[0]}{student.lastName[0]}
                           </div>
-                        </td>
-                        <td className="p-4 text-gray-400">{student.email}</td>
-                        <td className="p-4 text-right">
-                          <button
-                            onClick={() => handleRemoveStudent(student.id)}
-                            className="text-red-400 hover:text-red-300 text-sm"
-                          >
-                            Remove
-                          </button>
-                        </td>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-white font-medium text-sm truncate">
+                              {student.firstName} {student.lastName}
+                            </p>
+                            <p className="text-gray-400 text-xs truncate">{student.email}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveStudent(student.id)}
+                          className="text-red-400 hover:text-red-300 text-xs ml-2"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop view - table */}
+                <div className="hidden md:block bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left p-4 text-gray-400 font-medium">Student</th>
+                        <th className="text-left p-4 text-gray-400 font-medium">Email</th>
+                        <th className="text-right p-4 text-gray-400 font-medium">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {students.map((student) => (
+                        <tr key={student.id} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                                {student.firstName[0]}{student.lastName[0]}
+                              </div>
+                              <span className="text-white font-medium">
+                                {student.firstName} {student.lastName}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-4 text-gray-400">{student.email}</td>
+                          <td className="p-4 text-right">
+                            <button
+                              onClick={() => handleRemoveStudent(student.id)}
+                              className="text-red-400 hover:text-red-300 text-sm"
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
               </div>
             )}
           </div>
