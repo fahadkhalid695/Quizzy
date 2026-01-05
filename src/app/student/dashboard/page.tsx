@@ -72,15 +72,16 @@ export default function StudentDashboard() {
       const tests = testsResponse.tests || []
       const results = resultsResponse.results || []
 
-      // Process available tests
-      setAvailableTests(tests.slice(0, 3).map((test: any) => ({
+      // Process available tests - filter out already submitted tests
+      const unsubmittedTests = tests.filter((test: any) => !test.isSubmitted)
+      setAvailableTests(unsubmittedTests.slice(0, 3).map((test: any) => ({
         id: test.id,
         title: test.title,
         duration: test.duration,
         difficulty: test.difficulty,
         totalMarks: test.totalMarks,
         questionCount: test.questionCount || test.questions?.length || 0,
-        className: test.className
+        className: test.classId?.name || test.className
       })))
 
       // Process results for stats
@@ -93,7 +94,7 @@ export default function StudentDashboard() {
         testsTaken,
         averageScore,
         bestScore,
-        totalTests: tests.length
+        totalTests: unsubmittedTests.length  // Show only unsubmitted tests count
       })
 
       // Recent results
