@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-middleware';
 import Test from '@/models/Test';
 import Class from '@/models/Class';
+import TestResult from '@/models/TestResult';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,10 +57,31 @@ export async function GET(request: NextRequest) {
 
     console.log('Found tests:', tests.length);
 
+    // Get all test results for this student to check submission status
+    const testIds = tests.map(t => t._id.toString());
+    const submissions = await TestResult.find({
+      studentId: payload.userId,
+      testId: { $in: testIds }
+    }).select('testId percentage obtainedMarks createdAt');
+
+    // Create a map of testId to submission result
+    const submissionMap = new Map(
+      submissions.map(s => [s.testId.toString(), {
+        submitted: true,
+        resultId: s._id.toString(),
+        percentage: s.percentage,
+        obtainedMarks: s.obtainedMarks,
+        submittedAt: s.createdAt
+      }])
+    );
+
     return NextResponse.json({
       success: true,
       tests: tests.map((test) => {
+        const testIdStr = test._id.toString();
         const classIdStr = test.classId?.toString();
+        const submission = submissionMap.get(testIdStr);
+        
         return {
           id: test._id,
           title: test.title,
@@ -74,6 +96,9 @@ export async function GET(request: NextRequest) {
             name: classMap.get(classIdStr) || 'Unknown Class'
           },
           createdAt: test.createdAt,
+          // Submission status
+          isSubmitted: !!submission,
+          submission: submission || null,
         };
       }),
     });
