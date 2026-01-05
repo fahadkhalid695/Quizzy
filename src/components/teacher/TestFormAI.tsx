@@ -142,11 +142,14 @@ export default function TestFormAI({ classId, onSuccess, onCancel }: TestFormPro
       });
       
       console.log('Response received:', response);
+      console.log('First question data:', response.questions[0]);
       
       const generatedQuestions = response.questions.map((q: any, idx: number) => ({
         ...q,
         id: `gen-${Date.now()}-${idx}`,
       }));
+      
+      console.log('Generated questions with IDs:', generatedQuestions.map(q => ({ id: q.id, question: q.question?.substring(0, 50) })));
       
       setQuestions(generatedQuestions);
       setResearchSummary(response.researchSummary || '');

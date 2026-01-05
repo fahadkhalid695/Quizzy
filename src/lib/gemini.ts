@@ -46,10 +46,10 @@ Only return valid JSON array, no extra text.
       const questions = JSON.parse(jsonMatch[0])
       return questions.map((q: any) => ({
         type: q.type || QuestionType.MULTIPLE_CHOICE,
-        question: q.question,
+        question: q.question || q.text || q.questionText || q.content || '',
         options: q.options,
         correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
+        explanation: q.explanation || '',
         difficulty: q.difficulty || difficulty,
         marks: q.marks || 1,
       }))
@@ -302,6 +302,9 @@ CRITICAL:
         let options = q.options;
         let correctAnswer = q.correctAnswer;
         
+        // Get question text - AI might use different field names
+        const questionText = q.question || q.text || q.questionText || q.content || '';
+        
         // If the AI generated a type that wasn't requested, convert it to the first requested type
         if (!questionTypes.includes(questionType as any)) {
           questionType = questionTypes[0];
@@ -324,10 +327,10 @@ CRITICAL:
         
         return {
           type: questionType,
-          question: q.question,
+          question: questionText,
           options: options,
           correctAnswer: correctAnswer,
-          explanation: q.explanation,
+          explanation: q.explanation || '',
           difficulty: q.difficulty || difficulty,
           marks: q.marks || 1,
         };
@@ -522,6 +525,9 @@ CRITICAL:
         let options = q.options;
         let correctAnswer = q.correctAnswer;
         
+        // Get question text - AI might use different field names
+        const questionText = q.question || q.text || q.questionText || q.content || '';
+        
         // If the AI generated a type that wasn't requested, convert it to the first requested type
         if (!questionTypes.includes(questionType as any)) {
           questionType = questionTypes[0];
@@ -550,10 +556,10 @@ CRITICAL:
         
         return {
           type: questionType,
-          question: q.question,
+          question: questionText,
           options: options,
           correctAnswer: correctAnswer,
-          explanation: q.explanation,
+          explanation: q.explanation || '',
           difficulty: q.difficulty || difficulty,
           marks: q.marks || 1,
         };

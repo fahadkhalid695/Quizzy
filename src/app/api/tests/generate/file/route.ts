@@ -272,6 +272,9 @@ CRITICAL:
       let options = q.options;
       let correctAnswer = q.correctAnswer;
       
+      // Get question text - AI might use different field names
+      const questionText = q.question || q.text || q.questionText || q.content || '';
+      
       // If the AI generated a type that wasn't requested, convert it to the first requested type
       if (!questionTypes.includes(questionType)) {
         questionType = questionTypes[0];
@@ -298,10 +301,10 @@ CRITICAL:
       
       return {
         type: questionType,
-        question: q.question,
+        question: questionText,
         options: options,
         correctAnswer: correctAnswer,
-        explanation: q.explanation,
+        explanation: q.explanation || '',
         difficulty: q.difficulty || difficulty,
         marks: q.marks || 1,
       };
