@@ -3,6 +3,7 @@ import { connectDB } from '@/lib/db';
 import { verifyToken } from '@/lib/auth-middleware';
 import Test from '@/models/Test';
 import Class from '@/models/Class';
+import TestResult from '@/models/TestResult';
 
 export async function GET(request: NextRequest, props: { params: Promise<{ testId: string }> }) {
   try {
@@ -102,5 +103,46 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ testI
   } catch (error) {
     console.error('Update test error:', error);
     return NextResponse.json({ error: 'Failed to update test' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest, props: { params: Promise<{ testId: string }> }) {
+  try {
+    await connectDB();
+
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload || payload.role !== 'teacher') {
+      return NextResponse.json({ error: 'Only teachers can delete tests' }, { status: 403 });
+    }
+
+    const { testId } = await props.params;
+    const test = await Test.findById(testId);
+
+    if (!test) {
+      return NextResponse.json({ error: 'Test not found' }, { status: 404 });
+    }
+
+    if (test.teacherId.toString() !== payload.userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // Delete all associated test results
+    await TestResult.deleteMany({ testId: test._id });
+
+    // Delete the test
+    await Test.findByIdAndDelete(testId);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Test deleted successfully',
+    });
+  } catch (error) {
+    console.error('Delete test error:', error);
+    return NextResponse.json({ error: 'Failed to delete test' }, { status: 500 });
   }
 }

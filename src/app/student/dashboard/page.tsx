@@ -8,6 +8,31 @@ import Link from 'next/link'
 import ClassInvitations from '@/components/student/ClassInvitations'
 import { api } from '@/lib/api-client'
 
+interface DashboardStats {
+  testsTaken: number
+  averageScore: number
+  bestScore: number
+  totalTests: number
+}
+
+interface AvailableTest {
+  id: string
+  title: string
+  duration: number
+  difficulty: string
+  totalMarks: number
+  questionCount: number
+  className?: string
+}
+
+interface RecentResult {
+  id: string
+  testTitle: string
+  score: number
+  percentage: number
+  submittedAt: string
+}
+
 export default function StudentDashboard() {
   const router = useRouter()
   const hasHydrated = useHasHydrated()
@@ -16,13 +41,76 @@ export default function StudentDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [pendingInvitations, setPendingInvitations] = useState(0)
   const [activeTab, setActiveTab] = useState<'overview' | 'invitations'>('overview')
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<DashboardStats>({
+    testsTaken: 0,
+    averageScore: 0,
+    bestScore: 0,
+    totalTests: 0
+  })
+  const [availableTests, setAvailableTests] = useState<AvailableTest[]>([])
+  const [recentResults, setRecentResults] = useState<RecentResult[]>([])
 
-  // Fetch pending invitation count
+  // Fetch all dashboard data
   useEffect(() => {
     if (hasHydrated && user) {
+      fetchDashboardData()
       fetchInvitationCount()
     }
   }, [hasHydrated, user])
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch available tests and results in parallel
+      const [testsResponse, resultsResponse] = await Promise.all([
+        api.get<{ tests: any[] }>('/api/tests/available'),
+        api.get<{ results: any[] }>('/api/results/list')
+      ])
+
+      const tests = testsResponse.tests || []
+      const results = resultsResponse.results || []
+
+      // Process available tests
+      setAvailableTests(tests.slice(0, 3).map((test: any) => ({
+        id: test.id,
+        title: test.title,
+        duration: test.duration,
+        difficulty: test.difficulty,
+        totalMarks: test.totalMarks,
+        questionCount: test.questionCount || test.questions?.length || 0,
+        className: test.className
+      })))
+
+      // Process results for stats
+      const testsTaken = results.length
+      const totalScore = results.reduce((sum: number, r: any) => sum + (r.percentage || 0), 0)
+      const averageScore = testsTaken > 0 ? Math.round(totalScore / testsTaken) : 0
+      const bestScore = testsTaken > 0 ? Math.max(...results.map((r: any) => r.percentage || 0)) : 0
+
+      setStats({
+        testsTaken,
+        averageScore,
+        bestScore,
+        totalTests: tests.length
+      })
+
+      // Recent results
+      setRecentResults(results.slice(0, 3).map((result: any) => ({
+        id: result.id,
+        testTitle: result.testId?.title || 'Unknown Test',
+        score: result.score || 0,
+        percentage: result.percentage || 0,
+        submittedAt: result.submittedAt
+      })))
+
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const fetchInvitationCount = async () => {
     try {
@@ -71,18 +159,18 @@ export default function StudentDashboard() {
 
   const navItems = [
     { icon: '🏠', label: 'Dashboard', href: '/student/dashboard', active: true },
-    { icon: '�', label: 'Invitations', href: '#', badge: pendingInvitations, onClick: () => setActiveTab('invitations') },
-    { icon: '�📝', label: 'Available Tests', href: '/student/tests' },
+    { icon: '📨', label: 'Invitations', href: '#', badge: pendingInvitations, onClick: () => setActiveTab('invitations') },
+    { icon: '📝', label: 'Available Tests', href: '/student/tests' },
     { icon: '📈', label: 'My Results', href: '/student/results' },
     { icon: '🏆', label: 'Leaderboard', href: '/student/leaderboard' },
     { icon: '⚙️', label: 'Settings', href: '/student/settings' },
   ]
 
-  const stats = [
-    { label: 'Tests Taken', value: '12', icon: '📝', color: 'from-blue-500 to-cyan-500', change: '+3 this week' },
-    { label: 'Average Score', value: '85%', icon: '📊', color: 'from-purple-500 to-pink-500', change: '+5% improvement' },
-    { label: 'Best Score', value: '98%', icon: '⭐', color: 'from-yellow-500 to-orange-500', change: 'Personal best!' },
-    { label: 'Current Rank', value: '#8', icon: '🏆', color: 'from-green-500 to-emerald-500', change: 'Top 10%' },
+  const statCards = [
+    { label: 'Tests Taken', value: stats.testsTaken.toString(), icon: '📝', color: 'from-blue-500 to-cyan-500', change: `${stats.totalTests} available` },
+    { label: 'Average Score', value: `${stats.averageScore}%`, icon: '📊', color: 'from-purple-500 to-pink-500', change: stats.averageScore >= 70 ? 'Great work!' : 'Keep practicing' },
+    { label: 'Best Score', value: `${stats.bestScore}%`, icon: '⭐', color: 'from-yellow-500 to-orange-500', change: stats.bestScore >= 90 ? 'Excellent!' : 'Personal best' },
+    { label: 'Tests Available', value: stats.totalTests.toString(), icon: '🏆', color: 'from-green-500 to-emerald-500', change: 'Ready to take' },
   ]
 
   return (
@@ -222,7 +310,7 @@ export default function StudentDashboard() {
             <>
               {/* Stats Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {stats.map((stat, i) => (
+            {statCards.map((stat, i) => (
               <div
                 key={i}
                 className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
@@ -235,7 +323,7 @@ export default function StudentDashboard() {
 
                 {/* Value */}
                 <div className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mb-1`}>
-                  {stat.value}
+                  {loading ? '...' : stat.value}
                 </div>
 
                 {/* Label */}
@@ -243,7 +331,7 @@ export default function StudentDashboard() {
 
                 {/* Change */}
                 <div className="text-xs text-green-400 flex items-center gap-1">
-                  <span>↑</span> {stat.change}
+                  <span>📊</span> {stat.change}
                 </div>
 
                 {/* Hover glow */}
@@ -270,45 +358,61 @@ export default function StudentDashboard() {
                 </Link>
               </div>
 
-              <div className="space-y-3">
-                {[
-                  { title: 'Mathematics - Algebra Basics', duration: 45, questions: 15, difficulty: 'Easy', color: 'green' },
-                  { title: 'Physics - Motion & Forces', duration: 60, questions: 20, difficulty: 'Medium', color: 'yellow' },
-                  { title: 'Chemistry - Periodic Table', duration: 30, questions: 10, difficulty: 'Hard', color: 'red' },
-                ].map((test, i) => (
-                  <div
-                    key={i}
-                    className="group flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-purple-500/30 transition-all duration-200"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-2xl">
-                        📄
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors">
-                          {test.title}
-                        </h4>
-                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
-                          <span>⏱️ {test.duration} min</span>
-                          <span>•</span>
-                          <span>❓ {test.questions} questions</span>
-                          <span>•</span>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            test.color === 'green' ? 'bg-green-500/20 text-green-400' :
-                            test.color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-red-500/20 text-red-400'
-                          }`}>
-                            {test.difficulty}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="primary" size="sm">
-                      Start →
-                    </Button>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                </div>
+              ) : availableTests.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 mx-auto bg-white/5 rounded-full flex items-center justify-center text-4xl mb-4">
+                    📝
                   </div>
-                ))}
-              </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">No tests available</h3>
+                  <p className="text-gray-400 mb-6">Join a class to see available tests</p>
+                  <Button variant="primary" onClick={() => setActiveTab('invitations')}>
+                    View Invitations
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {availableTests.map((test, i) => {
+                    const difficultyColor = test.difficulty === 'easy' ? 'green' : test.difficulty === 'medium' ? 'yellow' : 'red'
+                    return (
+                      <div
+                        key={test.id}
+                        className="group flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-purple-500/30 transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-2xl">
+                            📄
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors">
+                              {test.title}
+                            </h4>
+                            <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                              <span>⏱️ {test.duration} min</span>
+                              <span>•</span>
+                              <span>📊 {test.totalMarks} marks</span>
+                              <span>•</span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                difficultyColor === 'green' ? 'bg-green-500/20 text-green-400' :
+                                difficultyColor === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-red-500/20 text-red-400'
+                              }`}>
+                                {test.difficulty}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button variant="primary" size="sm" onClick={() => router.push(`/student/test/${test.id}`)}>
+                          Start →
+                        </Button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Quick Actions + Recent Activity */}
@@ -337,26 +441,35 @@ export default function StudentDashboard() {
 
               {/* Recent Activity */}
               <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-                <h3 className="text-lg font-bold text-white mb-4">📊 Recent Activity</h3>
+                <h3 className="text-lg font-bold text-white mb-4">📊 Recent Results</h3>
                 <div className="space-y-3">
-                  {[
-                    { action: 'Completed test', subject: 'Math Quiz', score: '92%', time: '2h ago' },
-                    { action: 'Achieved rank', subject: '#5 in Physics', score: null, time: '1d ago' },
-                    { action: 'Completed test', subject: 'Chemistry', score: '88%', time: '2d ago' },
-                  ].map((activity, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                      <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-sm">
-                        {activity.score ? '✓' : '🏆'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">{activity.subject}</p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
-                      </div>
-                      {activity.score && (
-                        <span className="text-sm font-bold text-green-400">{activity.score}</span>
-                      )}
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
                     </div>
-                  ))}
+                  ) : recentResults.length === 0 ? (
+                    <div className="text-center py-6">
+                      <p className="text-gray-400 text-sm">No results yet</p>
+                      <p className="text-gray-500 text-xs mt-1">Complete a test to see your results</p>
+                    </div>
+                  ) : (
+                    recentResults.map((result, i) => (
+                      <div key={result.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-sm">
+                          {result.percentage >= 70 ? '✓' : '📝'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white truncate">{result.testTitle}</p>
+                          <p className="text-xs text-gray-500">
+                            {result.submittedAt ? new Date(result.submittedAt).toLocaleDateString() : 'Recently'}
+                          </p>
+                        </div>
+                        <span className={`text-sm font-bold ${result.percentage >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>
+                          {result.percentage}%
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

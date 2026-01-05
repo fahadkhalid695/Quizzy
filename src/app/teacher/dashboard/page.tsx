@@ -13,6 +13,14 @@ interface Stats {
   totalTests: number;
   totalStudents: number;
   averageScore: number;
+  recentSubmissions: number;
+}
+
+interface RecentActivity {
+  type: 'submission' | 'joined' | 'test';
+  subject: string;
+  count: string;
+  time: string;
 }
 
 export default function TeacherDashboard() {
@@ -21,8 +29,10 @@ export default function TeacherDashboard() {
     totalTests: 0,
     totalStudents: 0,
     averageScore: 0,
+    recentSubmissions: 0,
   });
   const [classes, setClasses] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
   const router = useRouter();
@@ -57,17 +67,51 @@ export default function TeacherDashboard() {
       // Calculate stats
       let totalTests = 0;
       let totalStudents = new Set<string>();
+      const activities: RecentActivity[] = [];
 
       for (const cls of classes) {
         totalTests += cls.testCount || 0;
-        cls.students?.forEach((s: any) => totalStudents.add(s._id));
+        cls.students?.forEach((s: any) => totalStudents.add(s._id || s));
+        
+        // Add class activities
+        if (cls.students?.length > 0) {
+          activities.push({
+            type: 'joined',
+            subject: cls.name,
+            count: `${cls.students.length} students`,
+            time: cls.updatedAt ? new Date(cls.updatedAt).toLocaleDateString() : 'Recently'
+          });
+        }
       }
+
+      // Try to get recent test results for activity
+      try {
+        for (const cls of classes.slice(0, 2)) {
+          if (cls._id || cls.id) {
+            const classId = cls._id || cls.id;
+            // Just add test count info to activities
+            if (cls.testCount > 0) {
+              activities.push({
+                type: 'test',
+                subject: cls.name,
+                count: `${cls.testCount} tests`,
+                time: 'Active'
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.log('Could not fetch recent activity details');
+      }
+
+      setRecentActivity(activities.slice(0, 3));
 
       setStats({
         totalClasses: classes.length,
         totalTests,
         totalStudents: totalStudents.size,
         averageScore: 0,
+        recentSubmissions: 0,
       });
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -116,10 +160,10 @@ export default function TeacherDashboard() {
   ];
 
   const statCards = [
-    { label: 'Total Classes', value: stats.totalClasses, icon: '📚', color: 'from-blue-500 to-cyan-500', change: '+2 this month' },
-    { label: 'Active Tests', value: stats.totalTests, icon: '✏️', color: 'from-purple-500 to-pink-500', change: '3 pending' },
-    { label: 'Students', value: stats.totalStudents, icon: '👥', color: 'from-green-500 to-emerald-500', change: '+12 new' },
-    { label: 'Avg Score', value: `${stats.averageScore}%`, icon: '⭐', color: 'from-yellow-500 to-orange-500', change: '+5% this week' },
+    { label: 'Total Classes', value: stats.totalClasses, icon: '📚', color: 'from-blue-500 to-cyan-500', change: stats.totalClasses > 0 ? 'Active classes' : 'Create your first class' },
+    { label: 'Active Tests', value: stats.totalTests, icon: '✏️', color: 'from-purple-500 to-pink-500', change: stats.totalTests > 0 ? 'Published tests' : 'Create a test' },
+    { label: 'Students', value: stats.totalStudents, icon: '👥', color: 'from-green-500 to-emerald-500', change: stats.totalStudents > 0 ? 'Enrolled students' : 'Invite students' },
+    { label: 'Classes Active', value: stats.totalClasses, icon: '⭐', color: 'from-yellow-500 to-orange-500', change: 'View analytics' },
   ];
 
   return (
@@ -346,22 +390,29 @@ export default function TeacherDashboard() {
               <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
                 <h3 className="text-lg font-bold text-white mb-4">📈 Recent Activity</h3>
                 <div className="space-y-3">
-                  {[
-                    { action: 'New submission', subject: 'Math Quiz', count: '15', time: '2h ago' },
-                    { action: 'Class joined', subject: 'Physics 101', count: '+3', time: '5h ago' },
-                    { action: 'Test completed', subject: 'Chemistry', count: '25', time: '1d ago' },
-                  ].map((activity, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                      <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-sm">
-                        {activity.action.includes('submission') ? '📝' : activity.action.includes('joined') ? '👥' : '✓'}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white truncate">{activity.subject}</p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
-                      </div>
-                      <span className="text-sm font-bold text-purple-400">{activity.count}</span>
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="w-8 h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
                     </div>
-                  ))}
+                  ) : recentActivity.length === 0 ? (
+                    <div className="text-center py-6">
+                      <p className="text-gray-400 text-sm">No recent activity</p>
+                      <p className="text-gray-500 text-xs mt-1">Create a class to get started</p>
+                    </div>
+                  ) : (
+                    recentActivity.map((activity, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-sm">
+                          {activity.type === 'submission' ? '📝' : activity.type === 'joined' ? '👥' : '✓'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-white truncate">{activity.subject}</p>
+                          <p className="text-xs text-gray-500">{activity.time}</p>
+                        </div>
+                        <span className="text-sm font-bold text-purple-400">{activity.count}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

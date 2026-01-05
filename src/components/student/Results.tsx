@@ -89,9 +89,12 @@ export default function Results({ resultId, testId, onClose }: ResultsProps) {
                 <div className="text-sm text-red-700 mt-1">
                   Similarity score: {result.cheatingScore}%
                 </div>
-                {result.cheatingDetails && result.cheatingDetails.length > 0 && (
+                {result.cheatingDetails && (
                   <ul className="text-xs text-red-700 mt-2 space-y-1">
-                    {result.cheatingDetails.map((detail: string, idx: number) => (
+                    {(typeof result.cheatingDetails === 'string' 
+                      ? result.cheatingDetails.split('; ').filter(Boolean)
+                      : Array.isArray(result.cheatingDetails) ? result.cheatingDetails : []
+                    ).map((detail: string, idx: number) => (
                       <li key={idx}>• {detail}</li>
                     ))}
                   </ul>
