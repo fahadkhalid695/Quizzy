@@ -69,7 +69,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 relative">
                 <Image
-                  src="/images/quizzy-logo.jpg"
+                  src="/images/quizzy.jpg"
                   alt="Quizzy Logo"
                   width={40}
                   height={40}
