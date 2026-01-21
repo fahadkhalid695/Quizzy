@@ -207,12 +207,11 @@ export default function StudentDashboard() {
           <Link href="/" className={`flex items-center gap-3 ${!sidebarOpen && 'lg:hidden'}`}>
             <div className="w-10 h-10 relative">
               <Image
-                src="/quizzy-logo.svg"
+                src="/logo.jpeg"
                 alt="Quizzy Logo"
                 fill
                 className="object-contain"
                 priority
-                unoptimized
               />
             </div>
             <span className="font-bold text-xl gradient-text">Quizzy</span>
@@ -305,12 +304,11 @@ export default function StudentDashboard() {
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 relative">
                 <Image
-                  src="/quizzy-logo.svg"
+                  src="/logo.jpeg"
                   alt="Quizzy Logo"
                   fill
                   className="object-contain"
                   priority
-                  unoptimized
                 />
               </div>
               <span className="font-bold text-lg gradient-text">Quizzy</span>

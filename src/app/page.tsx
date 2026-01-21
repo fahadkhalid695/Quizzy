@@ -69,12 +69,11 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 relative">
                 <Image
-                  src="/quizzy-logo.svg"
+                  src="/logo.jpeg"
                   alt="Quizzy Logo"
                   fill
                   className="object-contain"
                   priority
-                  unoptimized
                 />
               </div>
               <h1 className="text-2xl font-bold gradient-text">Quizzy</h1>

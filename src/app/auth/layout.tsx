@@ -23,12 +23,11 @@ export default function AuthLayout({
           <Link href="/" className="inline-flex items-center gap-3 mb-8">
             <div className="w-14 h-14 relative">
               <Image
-                src="/quizzy-logo.svg"
+                src="/logo.jpeg"
                 alt="Quizzy Logo"
                 fill
                 className="object-contain"
                 priority
-                unoptimized
               />
             </div>
             <span className="text-3xl font-bold text-white">Quizzy</span>
@@ -77,12 +76,11 @@ export default function AuthLayout({
             <Link href="/" className="inline-flex items-center gap-3">
               <div className="w-12 h-12 relative">
                 <Image
-                  src="/quizzy-logo.svg"
+                  src="/logo.jpeg"
                   alt="Quizzy Logo"
                   fill
                   className="object-contain"
                   priority
-                  unoptimized
                 />
               </div>
               <span className="text-2xl font-bold text-white">QuizMaster</span>
