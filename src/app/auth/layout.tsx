@@ -28,6 +28,7 @@ export default function AuthLayout({
                 fill
                 className="object-contain"
                 priority
+                unoptimized
               />
             </div>
             <span className="text-3xl font-bold text-white">Quizzy</span>
@@ -81,6 +82,7 @@ export default function AuthLayout({
                   fill
                   className="object-contain"
                   priority
+                  unoptimized
                 />
               </div>
               <span className="text-2xl font-bold text-white">QuizMaster</span>

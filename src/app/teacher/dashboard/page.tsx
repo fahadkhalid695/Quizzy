@@ -204,6 +204,7 @@ export default function TeacherDashboard() {
                 fill
                 className="object-contain"
                 priority
+                unoptimized
               />
             </div>
             <span className="font-bold text-xl gradient-text">Quizzy</span>
@@ -289,6 +290,7 @@ export default function TeacherDashboard() {
                   fill
                   className="object-contain"
                   priority
+                  unoptimized
                 />
               </div>
               <span className="font-bold text-lg gradient-text">Quizzy</span>

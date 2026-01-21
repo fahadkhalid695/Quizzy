@@ -74,6 +74,7 @@ export default function Home() {
                   fill
                   className="object-contain"
                   priority
+                  unoptimized
                 />
               </div>
               <h1 className="text-2xl font-bold gradient-text">Quizzy</h1>
