@@ -23,7 +23,7 @@ export default function AuthLayout({
           <Link href="/" className="inline-flex items-center gap-3 mb-8">
             <div className="w-14 h-14 relative">
               <Image
-                src="/quizzy-logo.jpg"
+                src="/images/quizzy-logo.jpg"
                 alt="Quizzy Logo"
                 width={56}
                 height={56}
@@ -78,7 +78,7 @@ export default function AuthLayout({
             <Link href="/" className="inline-flex items-center gap-3">
               <div className="w-12 h-12 relative">
                 <Image
-                  src="/quizzy-logo.jpg"
+                  src="/images/quizzy-logo.jpg"
                   alt="Quizzy Logo"
                   width={48}
                   height={48}
