@@ -71,9 +71,11 @@ export default function Home() {
                 <Image
                   src="/quizzy-logo.jpg"
                   alt="Quizzy Logo"
-                  fill
+                  width={40}
+                  height={40}
                   className="object-contain"
                   priority
+                  unoptimized
                 />
               </div>
               <h1 className="text-2xl font-bold gradient-text">Quizzy</h1>

@@ -25,9 +25,11 @@ export default function AuthLayout({
               <Image
                 src="/quizzy-logo.jpg"
                 alt="Quizzy Logo"
-                fill
+                width={56}
+                height={56}
                 className="object-contain"
                 priority
+                unoptimized
               />
             </div>
             <span className="text-3xl font-bold text-white">Quizzy</span>
@@ -78,9 +80,11 @@ export default function AuthLayout({
                 <Image
                   src="/quizzy-logo.jpg"
                   alt="Quizzy Logo"
-                  fill
+                  width={48}
+                  height={48}
                   className="object-contain"
                   priority
+                  unoptimized
                 />
               </div>
               <span className="text-2xl font-bold text-white">QuizMaster</span>

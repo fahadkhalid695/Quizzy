@@ -209,9 +209,11 @@ export default function StudentDashboard() {
               <Image
                 src="/quizzy-logo.jpg"
                 alt="Quizzy Logo"
-                fill
+                width={40}
+                height={40}
                 className="object-contain"
                 priority
+                unoptimized
               />
             </div>
             <span className="font-bold text-xl gradient-text">Quizzy</span>
@@ -306,9 +308,11 @@ export default function StudentDashboard() {
                 <Image
                   src="/quizzy-logo.jpg"
                   alt="Quizzy Logo"
-                  fill
+                  width={32}
+                  height={32}
                   className="object-contain"
                   priority
+                  unoptimized
                 />
               </div>
               <span className="font-bold text-lg gradient-text">Quizzy</span>
