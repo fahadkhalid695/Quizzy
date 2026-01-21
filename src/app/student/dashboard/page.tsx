@@ -207,7 +207,7 @@ export default function StudentDashboard() {
           <Link href="/" className={`flex items-center gap-3 ${!sidebarOpen && 'lg:hidden'}`}>
             <div className="w-10 h-10 relative">
               <Image
-                src="/logo.jpeg"
+                src="/quizzy-logo.jpg"
                 alt="Quizzy Logo"
                 fill
                 className="object-contain"
@@ -304,7 +304,7 @@ export default function StudentDashboard() {
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 relative">
                 <Image
-                  src="/logo.jpeg"
+                  src="/quizzy-logo.jpg"
                   alt="Quizzy Logo"
                   fill
                   className="object-contain"
