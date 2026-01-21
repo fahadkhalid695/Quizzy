@@ -19,16 +19,16 @@
   <!-- Quiz checklist design -->
   <g transform="translate(70, 70)">
     <!-- First item -->
-    <rect x="0" y="0" width="60" height="8" rx="4" fill="white" opacity="0.9"/>
-    <path d="M -10,4 L -7,7 L -3,1" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="0" y="0" width="60" height="8" rx="4" fill="#c084fc" opacity="0.9"/>
+    <path d="M -10,4 L -7,7 L -3,1" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     
     <!-- Second item -->
-    <rect x="0" y="17" width="50" height="8" rx="4" fill="white" opacity="0.9"/>
-    <path d="M -10,21 L -7,24 L -3,18" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="0" y="17" width="50" height="8" rx="4" fill="#c084fc" opacity="0.9"/>
+    <path d="M -10,21 L -7,24 L -3,18" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     
     <!-- Third item -->
-    <rect x="0" y="34" width="55" height="8" rx="4" fill="white" opacity="0.9"/>
-    <path d="M -10,38 L -7,41 L -3,35" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="0" y="34" width="55" height="8" rx="4" fill="#c084fc" opacity="0.9"/>
+    <path d="M -10,38 L -7,41 L -3,35" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
   <!-- AI spark icon in corner -->
