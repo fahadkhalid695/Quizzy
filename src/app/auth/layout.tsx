@@ -22,7 +22,7 @@ export default function AuthLayout({
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/30">
               📚
             </div>
-            <span className="text-3xl font-bold text-white">QuizMaster</span>
+            <span className="text-3xl font-bold text-white">Quizzy</span>
           </Link>
 
           {/* Illustration */}

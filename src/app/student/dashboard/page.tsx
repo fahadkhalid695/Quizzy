@@ -63,7 +63,7 @@ export default function StudentDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch available tests and results in parallel
       const [testsResponse, resultsResponse] = await Promise.all([
         api.get<{ tests: any[] }>('/api/tests/available'),
@@ -185,7 +185,7 @@ export default function StudentDashboard() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
@@ -207,7 +207,7 @@ export default function StudentDashboard() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
               📚
             </div>
-            <span className="font-bold text-xl gradient-text">QuizMaster</span>
+            <span className="font-bold text-xl gradient-text">Quizzy</span>
           </Link>
           <div className="flex gap-2">
             {/* Close button on mobile */}
@@ -232,19 +232,18 @@ export default function StudentDashboard() {
           {navItems.map((item) => {
             const isActive = item.active || (item.label === 'Invitations' && activeTab === 'invitations')
             const Component = item.onClick ? 'button' : Link
-            const props = item.onClick 
+            const props = item.onClick
               ? { onClick: () => { item.onClick(); setMobileMenuOpen(false); }, className: 'w-full' }
               : { href: item.href, onClick: () => setMobileMenuOpen(false) }
-            
+
             return (
               <Component
                 key={item.label}
                 {...props as any}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group w-full ${
-                  isActive
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group w-full ${isActive
                     ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white'
                     : 'text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
+                  }`}
               >
                 <span className={`text-xl ${isActive ? '' : 'group-hover:scale-110 transition-transform'}`}>
                   {item.icon}
@@ -299,7 +298,7 @@ export default function StudentDashboard() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
                 📚
               </div>
-              <span className="font-bold text-lg gradient-text">QuizMaster</span>
+              <span className="font-bold text-lg gradient-text">Quizzy</span>
             </Link>
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-xs">
               {user.firstName[0]}{user.lastName[0]}
@@ -348,171 +347,170 @@ export default function StudentDashboard() {
           ) : (
             <>
               {/* Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-            {statCards.map((stat, i) => (
-              <div
-                key={i}
-                className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                {/* Icon */}
-                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
-                  {stat.icon}
-                </div>
-
-                {/* Value */}
-                <div className={`text-xl md:text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mb-1`}>
-                  {loading ? '...' : stat.value}
-                </div>
-
-                {/* Label */}
-                <div className="text-gray-400 font-medium text-xs md:text-sm mb-1 md:mb-2">{stat.label}</div>
-
-                {/* Change */}
-                <div className="text-xs text-green-400 flex items-center gap-1 hidden md:flex">
-                  <span>📊</span> {stat.change}
-                </div>
-
-                {/* Hover glow */}
-                <div className={`absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity blur-xl`} />
-              </div>
-            ))}
-          </div>
-
-          {/* Two Column Layout */}
-          <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
-            {/* Available Tests - Takes 2 columns */}
-            <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <div className="flex items-center justify-between mb-4 md:mb-6">
-                <div>
-                  <h2 className="text-lg md:text-2xl font-bold text-white flex items-center gap-2">
-                    📝 Available Tests
-                  </h2>
-                  <p className="text-gray-400 text-xs md:text-sm mt-1">Tests waiting for you</p>
-                </div>
-                <Link href="/student/tests">
-                  <Button variant="ghost" size="sm" rightIcon={<span>→</span>}>
-                    View All
-                  </Button>
-                </Link>
-              </div>
-
-              {loading ? (
-                <div className="flex items-center justify-center py-8 md:py-12">
-                  <div className="w-8 md:w-10 h-8 md:h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-                </div>
-              ) : availableTests.length === 0 ? (
-                <div className="text-center py-8 md:py-12">
-                  <div className="w-16 h-16 md:w-20 md:h-20 mx-auto bg-white/5 rounded-full flex items-center justify-center text-3xl md:text-4xl mb-4">
-                    📝
-                  </div>
-                  <h3 className="text-lg md:text-xl font-semibold text-white mb-2">No tests available</h3>
-                  <p className="text-gray-400 mb-4 md:mb-6 text-sm">Join a class to see available tests</p>
-                  <Button variant="primary" onClick={() => setActiveTab('invitations')}>
-                    View Invitations
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {availableTests.map((test, i) => {
-                    const difficultyColor = test.difficulty === 'easy' ? 'green' : test.difficulty === 'medium' ? 'yellow' : 'red'
-                    return (
-                      <div
-                        key={test.id}
-                        className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 md:p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-purple-500/30 transition-all duration-200"
-                      >
-                        <div className="flex items-center gap-3 md:gap-4">
-                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
-                            📄
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors text-sm md:text-base truncate">
-                              {test.title}
-                            </h4>
-                            <div className="flex items-center flex-wrap gap-2 md:gap-3 text-xs md:text-sm text-gray-400 mt-1">
-                              <span>⏱️ {test.duration}m</span>
-                              <span className="hidden sm:inline">•</span>
-                              <span>📊 {test.totalMarks} marks</span>
-                              <span className="hidden sm:inline">•</span>
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                difficultyColor === 'green' ? 'bg-green-500/20 text-green-400' :
-                                difficultyColor === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-red-500/20 text-red-400'
-                              }`}>
-                                {test.difficulty}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <Button variant="primary" size="sm" onClick={() => router.push(`/student/test/${test.id}`)} className="self-end sm:self-center">
-                          Start →
-                        </Button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Quick Actions + Recent Activity */}
-            <div className="space-y-4 md:space-y-6">
-              {/* Quick Actions */}
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-                <h3 className="text-base md:text-lg font-bold text-white mb-3 md:mb-4">⚡ Quick Actions</h3>
-                <div className="grid grid-cols-2 gap-2 md:gap-3">
-                  {[
-                    { icon: '📝', label: 'Take Test', href: '/student/tests' },
-                    { icon: '📈', label: 'My Results', href: '/student/results' },
-                    { icon: '🏆', label: 'Leaderboard', href: '/student/leaderboard' },
-                    { icon: '⚙️', label: 'Settings', href: '/student/settings' },
-                  ].map((action, i) => (
-                    <Link
-                      key={i}
-                      href={action.href}
-                      className="flex flex-col items-center gap-1 md:gap-2 p-3 md:p-4 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 hover:border-purple-500/30 transition-all group"
-                    >
-                      <span className="text-xl md:text-2xl group-hover:scale-110 transition-transform">{action.icon}</span>
-                      <span className="text-xs md:text-sm text-gray-400 group-hover:text-white transition-colors">{action.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
-                <h3 className="text-base md:text-lg font-bold text-white mb-3 md:mb-4">📊 Recent Results</h3>
-                <div className="space-y-2 md:space-y-3">
-                  {loading ? (
-                    <div className="flex items-center justify-center py-6 md:py-8">
-                      <div className="w-6 h-6 md:w-8 md:h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+                {statCards.map((stat, i) => (
+                  <div
+                    key={i}
+                    className="group relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  >
+                    {/* Icon */}
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center text-xl md:text-2xl mb-3 md:mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
+                      {stat.icon}
                     </div>
-                  ) : recentResults.length === 0 ? (
-                    <div className="text-center py-4 md:py-6">
-                      <p className="text-gray-400 text-xs md:text-sm">No results yet</p>
-                      <p className="text-gray-500 text-xs mt-1">Complete a test to see your results</p>
+
+                    {/* Value */}
+                    <div className={`text-xl md:text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent mb-1`}>
+                      {loading ? '...' : stat.value}
+                    </div>
+
+                    {/* Label */}
+                    <div className="text-gray-400 font-medium text-xs md:text-sm mb-1 md:mb-2">{stat.label}</div>
+
+                    {/* Change */}
+                    <div className="text-xs text-green-400 flex items-center gap-1 hidden md:flex">
+                      <span>📊</span> {stat.change}
+                    </div>
+
+                    {/* Hover glow */}
+                    <div className={`absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity blur-xl`} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Two Column Layout */}
+              <div className="grid lg:grid-cols-3 gap-4 md:gap-6">
+                {/* Available Tests - Takes 2 columns */}
+                <div className="lg:col-span-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                  <div className="flex items-center justify-between mb-4 md:mb-6">
+                    <div>
+                      <h2 className="text-lg md:text-2xl font-bold text-white flex items-center gap-2">
+                        📝 Available Tests
+                      </h2>
+                      <p className="text-gray-400 text-xs md:text-sm mt-1">Tests waiting for you</p>
+                    </div>
+                    <Link href="/student/tests">
+                      <Button variant="ghost" size="sm" rightIcon={<span>→</span>}>
+                        View All
+                      </Button>
+                    </Link>
+                  </div>
+
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8 md:py-12">
+                      <div className="w-8 md:w-10 h-8 md:h-10 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                    </div>
+                  ) : availableTests.length === 0 ? (
+                    <div className="text-center py-8 md:py-12">
+                      <div className="w-16 h-16 md:w-20 md:h-20 mx-auto bg-white/5 rounded-full flex items-center justify-center text-3xl md:text-4xl mb-4">
+                        📝
+                      </div>
+                      <h3 className="text-lg md:text-xl font-semibold text-white mb-2">No tests available</h3>
+                      <p className="text-gray-400 mb-4 md:mb-6 text-sm">Join a class to see available tests</p>
+                      <Button variant="primary" onClick={() => setActiveTab('invitations')}>
+                        View Invitations
+                      </Button>
                     </div>
                   ) : (
-                    recentResults.map((result, i) => (
-                      <div key={result.id} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white/5 rounded-lg md:rounded-xl">
-                        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs md:text-sm flex-shrink-0">
-                          {result.percentage >= 70 ? '✓' : '📝'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs md:text-sm text-white truncate">{result.testTitle}</p>
-                          <p className="text-xs text-gray-500">
-                            {result.submittedAt ? new Date(result.submittedAt).toLocaleDateString() : 'Recently'}
-                          </p>
-                        </div>
-                        <span className={`text-xs md:text-sm font-bold ${result.percentage >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>
-                          {result.percentage}%
-                        </span>
-                      </div>
-                    ))
+                    <div className="space-y-3">
+                      {availableTests.map((test, i) => {
+                        const difficultyColor = test.difficulty === 'easy' ? 'green' : test.difficulty === 'medium' ? 'yellow' : 'red'
+                        return (
+                          <div
+                            key={test.id}
+                            className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 md:p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-purple-500/30 transition-all duration-200"
+                          >
+                            <div className="flex items-center gap-3 md:gap-4">
+                              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
+                                📄
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="font-semibold text-white group-hover:text-purple-300 transition-colors text-sm md:text-base truncate">
+                                  {test.title}
+                                </h4>
+                                <div className="flex items-center flex-wrap gap-2 md:gap-3 text-xs md:text-sm text-gray-400 mt-1">
+                                  <span>⏱️ {test.duration}m</span>
+                                  <span className="hidden sm:inline">•</span>
+                                  <span>📊 {test.totalMarks} marks</span>
+                                  <span className="hidden sm:inline">•</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${difficultyColor === 'green' ? 'bg-green-500/20 text-green-400' :
+                                      difficultyColor === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
+                                        'bg-red-500/20 text-red-400'
+                                    }`}>
+                                    {test.difficulty}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <Button variant="primary" size="sm" onClick={() => router.push(`/student/test/${test.id}`)} className="self-end sm:self-center">
+                              Start →
+                            </Button>
+                          </div>
+                        )
+                      })}
+                    </div>
                   )}
                 </div>
+
+                {/* Quick Actions + Recent Activity */}
+                <div className="space-y-4 md:space-y-6">
+                  {/* Quick Actions */}
+                  <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+                    <h3 className="text-base md:text-lg font-bold text-white mb-3 md:mb-4">⚡ Quick Actions</h3>
+                    <div className="grid grid-cols-2 gap-2 md:gap-3">
+                      {[
+                        { icon: '📝', label: 'Take Test', href: '/student/tests' },
+                        { icon: '📈', label: 'My Results', href: '/student/results' },
+                        { icon: '🏆', label: 'Leaderboard', href: '/student/leaderboard' },
+                        { icon: '⚙️', label: 'Settings', href: '/student/settings' },
+                      ].map((action, i) => (
+                        <Link
+                          key={i}
+                          href={action.href}
+                          className="flex flex-col items-center gap-1 md:gap-2 p-3 md:p-4 bg-white/5 border border-white/10 rounded-lg md:rounded-xl hover:bg-white/10 hover:border-purple-500/30 transition-all group"
+                        >
+                          <span className="text-xl md:text-2xl group-hover:scale-110 transition-transform">{action.icon}</span>
+                          <span className="text-xs md:text-sm text-gray-400 group-hover:text-white transition-colors">{action.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+                    <h3 className="text-base md:text-lg font-bold text-white mb-3 md:mb-4">📊 Recent Results</h3>
+                    <div className="space-y-2 md:space-y-3">
+                      {loading ? (
+                        <div className="flex items-center justify-center py-6 md:py-8">
+                          <div className="w-6 h-6 md:w-8 md:h-8 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
+                        </div>
+                      ) : recentResults.length === 0 ? (
+                        <div className="text-center py-4 md:py-6">
+                          <p className="text-gray-400 text-xs md:text-sm">No results yet</p>
+                          <p className="text-gray-500 text-xs mt-1">Complete a test to see your results</p>
+                        </div>
+                      ) : (
+                        recentResults.map((result, i) => (
+                          <div key={result.id} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-white/5 rounded-lg md:rounded-xl">
+                            <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-xs md:text-sm flex-shrink-0">
+                              {result.percentage >= 70 ? '✓' : '📝'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs md:text-sm text-white truncate">{result.testTitle}</p>
+                              <p className="text-xs text-gray-500">
+                                {result.submittedAt ? new Date(result.submittedAt).toLocaleDateString() : 'Recently'}
+                              </p>
+                            </div>
+                            <span className={`text-xs md:text-sm font-bold ${result.percentage >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>
+                              {result.percentage}%
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
             </>
           )}
         </div>

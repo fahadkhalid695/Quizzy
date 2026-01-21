@@ -37,7 +37,7 @@ export default function TeacherDashboard() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const router = useRouter();
-  
+
   // Use the hydration hook
   const hasHydrated = useHasHydrated();
   const user = useAuthStore((state) => state.user);
@@ -73,7 +73,7 @@ export default function TeacherDashboard() {
       for (const cls of classes) {
         totalTests += cls.testCount || 0;
         cls.students?.forEach((s: any) => totalStudents.add(s._id || s));
-        
+
         // Add class activities
         if (cls.students?.length > 0) {
           activities.push({
@@ -177,7 +177,7 @@ export default function TeacherDashboard() {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
@@ -199,7 +199,7 @@ export default function TeacherDashboard() {
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
               📚
             </div>
-            <span className="font-bold text-xl gradient-text">QuizMaster</span>
+            <span className="font-bold text-xl gradient-text">Quizzy</span>
           </Link>
           <div className="flex gap-2">
             {/* Close button on mobile */}
@@ -226,11 +226,10 @@ export default function TeacherDashboard() {
               key={item.label}
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                item.active
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${item.active
                   ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white'
                   : 'text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
+                }`}
             >
               <span className={`text-xl ${item.active ? '' : 'group-hover:scale-110 transition-transform'}`}>
                 {item.icon}
@@ -279,7 +278,7 @@ export default function TeacherDashboard() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
                 📚
               </div>
-              <span className="font-bold text-lg gradient-text">QuizMaster</span>
+              <span className="font-bold text-lg gradient-text">Quizzy</span>
             </Link>
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-xs">
               {user.firstName[0]}{user.lastName[0]}
@@ -299,8 +298,8 @@ export default function TeacherDashboard() {
               </h1>
               <p className="text-gray-400 text-sm md:text-lg">Manage your classes and inspire your students</p>
             </div>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={() => router.push('/teacher/classes')}
               leftIcon={<span>+</span>}
             >

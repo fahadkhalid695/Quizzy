@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import Button from '@/components/ui/Button'
 
 export default function Home() {
@@ -66,10 +67,16 @@ export default function Home() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl shadow-lg shadow-purple-500/30">
-                📚
+              <div className="w-10 h-10 relative">
+                <Image
+                  src="/quizzy-logo.svg"
+                  alt="Quizzy Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
-              <h1 className="text-2xl font-bold gradient-text">QuizMaster</h1>
+              <h1 className="text-2xl font-bold gradient-text">Quizzy</h1>
             </div>
             <div className="flex items-center gap-4">
               <Link href="/auth/login">
@@ -106,7 +113,7 @@ export default function Home() {
 
             {/* Subheadline */}
             <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              Upload any document, enter a topic, or paste text — our AI will generate 
+              Upload any document, enter a topic, or paste text — our AI will generate
               perfectly crafted quiz questions with instant grading and analytics.
             </p>
 
@@ -245,7 +252,7 @@ export default function Home() {
               Ready to Transform Your Teaching?
             </h2>
             <p className="text-xl text-gray-400 mb-8">
-              Join thousands of educators already using QuizMaster
+              Join thousands of educators already using Quizzy
             </p>
             <Link href="/auth/register">
               <Button variant="primary" size="xl">
@@ -260,7 +267,7 @@ export default function Home() {
       <footer className="relative z-10 py-8 border-t border-white/10">
         <div className="container mx-auto px-6 text-center">
           <p className="text-gray-500 text-sm">
-            © 2026 QuizMaster. All rights reserved. | Built with ❤️ for educators
+            © 2026 Quizzy. All rights reserved. | Built with ❤️ for educators
           </p>
         </div>
       </footer>
