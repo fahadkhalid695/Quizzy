@@ -5,6 +5,8 @@ import Invitation from '@/models/Invitation'
 import Class from '@/models/Class'
 import User from '@/models/User'
 
+export const dynamic = 'force-dynamic'
+
 // GET - Get all invitations sent by teacher
 export async function GET(request: NextRequest) {
   try {

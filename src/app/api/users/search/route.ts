@@ -3,6 +3,8 @@ import { connectDB } from '@/lib/db'
 import { verifyToken } from '@/lib/auth-middleware'
 import User from '@/models/User'
 
+export const dynamic = 'force-dynamic'
+
 // GET - Search for users by email
 export async function GET(request: NextRequest) {
   try {

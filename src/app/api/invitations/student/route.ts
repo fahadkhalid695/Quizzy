@@ -4,6 +4,8 @@ import { verifyToken } from '@/lib/auth-middleware'
 import Invitation from '@/models/Invitation'
 import Class from '@/models/Class'
 
+export const dynamic = 'force-dynamic'
+
 // GET - Get all invitations for a student
 export async function GET(request: NextRequest) {
   try {
@@ -23,17 +25,17 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') // 'pending', 'accepted', 'declined', 'all'
 
     const query: any = { studentId: payload.userId }
-    
+
     if (status && status !== 'all') {
       query.status = status
     }
 
     // Also check for expired invitations and update them
     await Invitation.updateMany(
-      { 
-        studentId: payload.userId, 
-        status: 'pending', 
-        expiresAt: { $lt: new Date() } 
+      {
+        studentId: payload.userId,
+        status: 'pending',
+        expiresAt: { $lt: new Date() }
       },
       { $set: { status: 'expired' } }
     )
