@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore, useHasHydrated } from '@/lib/store';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
+import Image from 'next/image';
 import ClassInvitations from '@/components/student/ClassInvitations';
 import { api } from '@/lib/api-client';
 
@@ -204,8 +205,14 @@ export default function StudentDashboard() {
         {/* Logo */}
         <div className="p-4 flex justify-between items-center border-b border-white/10">
           <Link href="/" className={`flex items-center gap-3 ${!sidebarOpen && 'lg:hidden'}`}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
-              📚
+            <div className="w-10 h-10 relative">
+              <Image
+                src="/quizzy-logo.svg"
+                alt="Quizzy Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <span className="font-bold text-xl gradient-text">Quizzy</span>
           </Link>
@@ -241,8 +248,8 @@ export default function StudentDashboard() {
                 key={item.label}
                 {...props as any}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group w-full ${isActive
-                    ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white'
-                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
                   }`}
               >
                 <span className={`text-xl ${isActive ? '' : 'group-hover:scale-110 transition-transform'}`}>
@@ -295,8 +302,14 @@ export default function StudentDashboard() {
               ☰
             </button>
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
-                📚
+              <div className="w-8 h-8 relative">
+                <Image
+                  src="/quizzy-logo.svg"
+                  alt="Quizzy Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
               <span className="font-bold text-lg gradient-text">Quizzy</span>
             </Link>
@@ -434,8 +447,8 @@ export default function StudentDashboard() {
                                   <span>📊 {test.totalMarks} marks</span>
                                   <span className="hidden sm:inline">•</span>
                                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${difficultyColor === 'green' ? 'bg-green-500/20 text-green-400' :
-                                      difficultyColor === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
-                                        'bg-red-500/20 text-red-400'
+                                    difficultyColor === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
+                                      'bg-red-500/20 text-red-400'
                                     }`}>
                                     {test.difficulty}
                                   </span>

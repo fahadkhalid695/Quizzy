@@ -7,6 +7,7 @@ import { useNotify } from '@/components/common/Notification';
 import { api } from '@/lib/api-client';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface Stats {
   totalClasses: number;
@@ -196,8 +197,14 @@ export default function TeacherDashboard() {
         {/* Logo */}
         <div className="p-4 flex justify-between items-center border-b border-white/10">
           <Link href="/" className={`flex items-center gap-3 ${collapsed && 'lg:hidden'}`}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
-              📚
+            <div className="w-10 h-10 relative">
+              <Image
+                src="/quizzy-logo.svg"
+                alt="Quizzy Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <span className="font-bold text-xl gradient-text">Quizzy</span>
           </Link>
@@ -227,8 +234,8 @@ export default function TeacherDashboard() {
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${item.active
-                  ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-white'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
             >
               <span className={`text-xl ${item.active ? '' : 'group-hover:scale-110 transition-transform'}`}>
@@ -275,8 +282,14 @@ export default function TeacherDashboard() {
               ☰
             </button>
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
-                📚
+              <div className="w-8 h-8 relative">
+                <Image
+                  src="/quizzy-logo.svg"
+                  alt="Quizzy Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
               <span className="font-bold text-lg gradient-text">Quizzy</span>
             </Link>

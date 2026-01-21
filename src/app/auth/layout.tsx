@@ -1,6 +1,8 @@
 import React from 'react'
 import Link from 'next/link'
 
+import Image from 'next/image'
+
 export default function AuthLayout({
   children,
 }: {
@@ -19,8 +21,14 @@ export default function AuthLayout({
         <div className="relative z-10 text-center max-w-lg">
           {/* Logo */}
           <Link href="/" className="inline-flex items-center gap-3 mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/30">
-              📚
+            <div className="w-14 h-14 relative">
+              <Image
+                src="/quizzy-logo.svg"
+                alt="Quizzy Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <span className="text-3xl font-bold text-white">Quizzy</span>
           </Link>
@@ -66,8 +74,14 @@ export default function AuthLayout({
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xl shadow-lg shadow-purple-500/30">
-                📚
+              <div className="w-12 h-12 relative">
+                <Image
+                  src="/quizzy-logo.svg"
+                  alt="Quizzy Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
               <span className="text-2xl font-bold text-white">QuizMaster</span>
             </Link>
